@@ -79,11 +79,6 @@ The project still uses mock data by default.
 4. Paste your API key into `tmdbApiKey`
 5. Run the app again
 
-## Important note about GitHub
-
-- `lib/core/config/api_config.dart` is ignored in `.gitignore`
-- If you create a Git repository and run `git add .`, this local API file should stay out of version control
-- If you need to recreate it later, copy from `lib/core/config/api_config.example.dart`
 
 ## Notes
 
