@@ -2,15 +2,6 @@
 
 Flutter movie app demo built with Dart, Riverpod, and a simple clean architecture folder structure.
 
-## What I changed in this revision
-
-- Kept the app branding as **Mixcine**
-- Moved the app name into one file: `lib/core/config/app_branding.dart`
-- Moved TMDB connection values into a separate local file: `lib/core/config/api_config.dart`
-- Added `lib/core/config/api_config.example.dart` as a template
-- Added `.gitignore` so `api_config.dart` is not pushed to GitHub by accident
-- Updated the dark theme colors to be closer to the noir / red reference
-
 ## Included screens
 
 - Splash screen
@@ -79,12 +70,11 @@ The project still uses mock data by default.
 4. Paste your API key into `tmdbApiKey`
 5. Run the app again
 
-## Important note about GitHub
-
-- `lib/core/config/api_config.dart` is ignored in `.gitignore`
-- If you create a Git repository and run `git add .`, this local API file should stay out of version control
-- If you need to recreate it later, copy from `lib/core/config/api_config.example.dart`
+---
+ *If you need help or any further contact please contact through my Gmail which locate on my Github profile, wishing you have a nice day.* 
 
 ## Notes
 
-- The layout is still a developer-friendly base so your team can continue adjusting it screen by screen.
+- This is still in the beta version of developing so expecting bugs and non-functional button.
+- Remember to update Flutter and Dart to the latest version to make sure everything works.
+- This repo was created in 9th April 2026, as University final project by the team of 5
