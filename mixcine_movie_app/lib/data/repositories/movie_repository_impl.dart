@@ -36,18 +36,18 @@ class MovieRepositoryImpl implements MovieRepository {
 
     return <MovieSection>[
       MovieSection(
-        title: 'Popular now',
-        subtitle: 'The movies everyone is opening first.',
+        title: 'Taylor Swift',
+        subtitle: 'Peak phim',
         movies: popular.map((item) => item.toEntity()).toList(),
       ),
       MovieSection(
         title: 'Top rated',
-        subtitle: 'Highest scored titles this week.',
+        subtitle: 'Đánh giá cao nhất tuần này',
         movies: topRated.map((item) => item.toEntity()).toList(),
       ),
       MovieSection(
         title: 'Coming soon',
-        subtitle: 'Fresh releases and upcoming picks.',
+        subtitle: 'Phim sắp ra',
         movies: upcoming.map((item) => item.toEntity()).toList(),
       ),
     ];

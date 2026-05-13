@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 
-import '../../core/config/api_config.dart';
 import '../../core/config/app_config.dart';
 import '../models/movie_model.dart';
 

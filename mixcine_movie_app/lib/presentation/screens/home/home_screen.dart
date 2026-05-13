@@ -95,7 +95,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 child: ListView.separated(
                                   scrollDirection: Axis.horizontal,
                                   itemCount: section.movies.length,
-                                  separatorBuilder: (_, __) => const SizedBox(width: 14),
+                                  separatorBuilder: (_, _) => const SizedBox(width: 14),
                                   itemBuilder: (context, index) {
                                     final movie = section.movies[index];
                                     return SizedBox(

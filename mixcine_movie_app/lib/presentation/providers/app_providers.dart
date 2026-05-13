@@ -2,7 +2,6 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/config/api_config.dart';
-import '../../core/config/app_config.dart';
 import '../../core/services/app_preferences.dart';
 import '../../data/datasources/favorites_local_data_source.dart';
 import '../../data/datasources/mock_movie_data_source.dart';
