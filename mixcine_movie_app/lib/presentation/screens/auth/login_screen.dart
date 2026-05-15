@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../widgets/primary_button.dart';
 import '../../providers/auth_provider.dart';
@@ -38,7 +39,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final state = ref.read(authStateProvider);
     if (state.token != null) {
       // Navigate to dashboard after login
-      Navigator.of(context).pushReplacementNamed('/dashboard');
+      context.go('/dashboard');
     } else if (state.error != null) {
       ScaffoldMessenger.of(
         context,
@@ -116,8 +117,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                       const SizedBox(height: 8),
                       TextButton(
-                        onPressed: () =>
-                            Navigator.of(context).pushNamed('/register'),
+                        onPressed: () => context.go('/register'),
                         child: const Text('Tạo tài khoản mới'),
                       ),
                     ],
