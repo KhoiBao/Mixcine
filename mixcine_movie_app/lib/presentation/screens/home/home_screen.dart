@@ -58,8 +58,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               final crossAxisCount = constraints.maxWidth >= 900
                   ? 4
                   : constraints.maxWidth >= 600
-                      ? 3
-                      : 2;
+                  ? 3
+                  : 2;
 
               return RefreshIndicator(
                 onRefresh: () async {
@@ -77,14 +77,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
                             _Header(
-                              onSearchTap: () => ref.read(dashboardIndexProvider.notifier).setIndex(1),
+                              onSearchTap: () => ref
+                                  .read(dashboardIndexProvider.notifier)
+                                  .setIndex(1),
                             ),
                             const SizedBox(height: 24),
                             if (data.heroMovie != null)
                               _HeroBanner(
                                 movie: data.heroMovie!,
-                                onOpenDetails: () => context.push('/movie/${data.heroMovie!.id}'),
-                                onPlay: () => context.push('/player/${data.heroMovie!.id}'),
+                                onOpenDetails: () => context.push(
+                                  '/movie/${data.heroMovie!.id}',
+                                ),
+                                onPlay: () => context.push(
+                                  '/player/${data.heroMovie!.id}',
+                                ),
                               ),
                             const SizedBox(height: 28),
                             for (final section in data.sections) ...<Widget>[
@@ -95,16 +101,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 child: ListView.separated(
                                   scrollDirection: Axis.horizontal,
                                   itemCount: section.movies.length,
-                                  separatorBuilder: (_, __) => const SizedBox(width: 14),
+                                  separatorBuilder: (_, _) =>
+                                      const SizedBox(width: 14),
                                   itemBuilder: (context, index) {
                                     final movie = section.movies[index];
                                     return SizedBox(
                                       width: 158,
                                       child: MoviePosterCard(
                                         movie: movie,
-                                        isFavorite: favoriteIds.contains(movie.id),
-                                        onTap: () => context.push('/movie/${movie.id}'),
-                                        onFavoriteTap: () => ref.read(favoriteIdsProvider.notifier).toggle(movie.id),
+                                        isFavorite: favoriteIds.contains(
+                                          movie.id,
+                                        ),
+                                        onTap: () =>
+                                            context.push('/movie/${movie.id}'),
+                                        onFavoriteTap: () => ref
+                                            .read(favoriteIdsProvider.notifier)
+                                            .toggle(movie.id),
                                       ),
                                     );
                                   },
@@ -129,18 +141,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     SliverPadding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       sliver: SliverGrid(
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                            final movie = data.discoverMovies[index];
-                            return MoviePosterCard(
-                              movie: movie,
-                              isFavorite: favoriteIds.contains(movie.id),
-                              onTap: () => context.push('/movie/${movie.id}'),
-                              onFavoriteTap: () => ref.read(favoriteIdsProvider.notifier).toggle(movie.id),
-                            );
-                          },
-                          childCount: data.discoverMovies.length,
-                        ),
+                        delegate: SliverChildBuilderDelegate((context, index) {
+                          final movie = data.discoverMovies[index];
+                          return MoviePosterCard(
+                            movie: movie,
+                            isFavorite: favoriteIds.contains(movie.id),
+                            onTap: () => context.push('/movie/${movie.id}'),
+                            onFavoriteTap: () => ref
+                                .read(favoriteIdsProvider.notifier)
+                                .toggle(movie.id),
+                          );
+                        }, childCount: data.discoverMovies.length),
                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: crossAxisCount,
                           crossAxisSpacing: 14,
@@ -156,11 +167,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           child: data.isLoadingMore
                               ? const CircularProgressIndicator()
                               : data.hasMore
-                                  ? const SizedBox.shrink()
-                                  : Text(
-                                      'Hết phim (^)>',
-                                      style: Theme.of(context).textTheme.bodyMedium,
-                                    ),
+                              ? const SizedBox.shrink()
+                              : Text(
+                                  'Hết phim (^)>',
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ),
                         ),
                       ),
                     ),
@@ -294,7 +305,9 @@ class _HeroBanner extends StatelessWidget {
               ),
               child: Text(
                 'Featured tonight',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: Colors.white),
               ),
             ),
             const SizedBox(height: 12),
@@ -305,7 +318,9 @@ class _HeroBanner extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               '${movie.year} • ${movie.durationLabel} • ${movie.ratingLabel}',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white70),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
             ),
             const SizedBox(height: 18),
             Row(
