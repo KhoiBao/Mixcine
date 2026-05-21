@@ -1,31 +1,33 @@
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sqflite/sqflite.dart';
+
+import '../../database/database_helper.dart';
 
 class FavoritesLocalDataSource {
-  FavoritesLocalDataSource() : _prefs = SharedPreferencesAsync();
-
-  final SharedPreferencesAsync _prefs;
-
-  static const String _favoriteIdsKey = 'favorite_movie_ids';
+  final DatabaseHelper _dbHelper = DatabaseHelper();
 
   Future<Set<int>> getFavoriteIds() async {
-    final values = await _prefs.getStringList(_favoriteIdsKey) ?? <String>[];
-    return values.map(int.parse).toSet();
+    final Database db = await _dbHelper.database;
+
+    final maps = await db.query('favorites');
+
+    return maps.map((item) => item['movie_id'] as int).toSet();
   }
 
   Future<Set<int>> toggleFavorite(int movieId) async {
-    final current = await getFavoriteIds();
+    final Database db = await _dbHelper.database;
 
-    if (current.contains(movieId)) {
-      current.remove(movieId);
-    } else {
-      current.add(movieId);
-    }
-
-    await _prefs.setStringList(
-      _favoriteIdsKey,
-      current.map((item) => item.toString()).toList(),
+    final existing = await db.query(
+      'favorites',
+      where: 'movie_id = ?',
+      whereArgs: [movieId],
     );
 
-    return current;
+    if (existing.isNotEmpty) {
+      await db.delete('favorites', where: 'movie_id = ?', whereArgs: [movieId]);
+    } else {
+      await db.insert('favorites', {'movie_id': movieId});
+    }
+
+    return await getFavoriteIds();
   }
 }
