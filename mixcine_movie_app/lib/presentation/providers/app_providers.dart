@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/config/api_config.dart';
-import '../../core/config/app_config.dart';
+
 import '../../core/services/app_preferences.dart';
 import '../../data/datasources/favorites_local_data_source.dart';
 import '../../data/datasources/mock_movie_data_source.dart';
@@ -39,7 +39,9 @@ final movieRemoteDataSourceProvider = Provider<MovieRemoteDataSource>((ref) {
   return MovieRemoteDataSource(ref.watch(dioProvider));
 });
 
-final favoritesLocalDataSourceProvider = Provider<FavoritesLocalDataSource>((ref) {
+final favoritesLocalDataSourceProvider = Provider<FavoritesLocalDataSource>((
+  ref,
+) {
   return FavoritesLocalDataSource();
 });
 
@@ -55,7 +57,9 @@ final getHomeSectionsUseCaseProvider = Provider<GetHomeSectionsUseCase>((ref) {
   return GetHomeSectionsUseCase(ref.watch(movieRepositoryProvider));
 });
 
-final getDiscoverMoviesUseCaseProvider = Provider<GetDiscoverMoviesUseCase>((ref) {
+final getDiscoverMoviesUseCaseProvider = Provider<GetDiscoverMoviesUseCase>((
+  ref,
+) {
   return GetDiscoverMoviesUseCase(ref.watch(movieRepositoryProvider));
 });
 
@@ -75,7 +79,9 @@ final toggleFavoriteUseCaseProvider = Provider<ToggleFavoriteUseCase>((ref) {
   return ToggleFavoriteUseCase(ref.watch(movieRepositoryProvider));
 });
 
-final getFavoriteMoviesUseCaseProvider = Provider<GetFavoriteMoviesUseCase>((ref) {
+final getFavoriteMoviesUseCaseProvider = Provider<GetFavoriteMoviesUseCase>((
+  ref,
+) {
   return GetFavoriteMoviesUseCase(ref.watch(movieRepositoryProvider));
 });
 

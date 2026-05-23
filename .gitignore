@@ -1,0 +1,18 @@
+# Flutter / Dart
+.dart_tool/
+.packages
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# IDE
+.idea/
+.vscode/
+
+# Platform generated
+android/.gradle/
+ios/Pods/
+macos/Pods/
+
+# Local API config
+lib/core/config/api_config.dart
