@@ -80,6 +80,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               onSearchTap: () => ref
                                   .read(dashboardIndexProvider.notifier)
                                   .setIndex(1),
+                              onProfileTap: () => ref
+                                  .read(dashboardIndexProvider.notifier)
+                                  .setIndex(3),
                             ),
                             const SizedBox(height: 24),
                             if (data.heroMovie != null)
@@ -101,6 +104,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 child: ListView.separated(
                                   scrollDirection: Axis.horizontal,
                                   itemCount: section.movies.length,
+                                  separatorBuilder: (_, __) =>
+                                      const SizedBox(width: 14),
                                   separatorBuilder: (_, _) => const SizedBox(width: 14),
                                   itemBuilder: (context, index) {
                                     final movie = section.movies[index];
@@ -186,9 +191,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 }
 
 class _Header extends StatelessWidget {
-  const _Header({required this.onSearchTap});
+  const _Header({required this.onSearchTap, required this.onProfileTap});
 
   final VoidCallback onSearchTap;
+  final VoidCallback onProfileTap;
 
   @override
   Widget build(BuildContext context) {
@@ -222,14 +228,18 @@ class _Header extends StatelessWidget {
                 ],
               ),
             ),
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(14),
+            InkWell(
+              onTap: onProfileTap,
+              borderRadius: BorderRadius.circular(14),
+              child: Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Icon(Icons.person_outline),
               ),
-              child: const Icon(Icons.person_outline),
             ),
           ],
         ),
