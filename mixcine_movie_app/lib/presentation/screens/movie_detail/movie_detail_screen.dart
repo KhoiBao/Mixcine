@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../domain/entities/movie_comment.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/favorites_provider.dart';
 import '../../providers/movie_detail_provider.dart';
 import '../../providers/rating_comment_provider.dart';
@@ -335,6 +336,15 @@ class _CommentsSectionState extends ConsumerState<_CommentsSection> {
   }
 
   void _submitComment() {
+    // ✓ Get current user from auth provider
+    final authState = ref.read(authStateProvider);
+    if (authState.user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please login to add a comment')),
+      );
+      return;
+    }
+
     if (_commentController.text.isEmpty) {
       ScaffoldMessenger.of(
         context,
@@ -342,11 +352,16 @@ class _CommentsSectionState extends ConsumerState<_CommentsSection> {
       return;
     }
 
+    final userId = authState.user!.email; // ✓ Use email as unique user ID
+    final author =
+        authState.user!.fullName ?? authState.user!.email; // ✓ Display name
+
     ref
         .read(movieCommentsProvider.notifier)
         .addComment(
           widget.movieId,
-          'You',
+          userId,
+          author,
           _commentController.text,
           0, // Không cho phép rating comment của bản thân
         );
@@ -449,7 +464,7 @@ class _CommentsSectionState extends ConsumerState<_CommentsSection> {
   }
 }
 
-class _CommentTile extends StatelessWidget {
+class _CommentTile extends ConsumerWidget {
   const _CommentTile({
     required this.comment,
     required this.movieId,
@@ -461,7 +476,12 @@ class _CommentTile extends StatelessWidget {
   final WidgetRef ref;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // ✓ Get current user from auth provider
+    final authState = ref.watch(authStateProvider);
+    final currentUserId = authState.user?.email;
+    final isCommentOwner = comment.userId == currentUserId;
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -486,7 +506,8 @@ class _CommentTile extends StatelessWidget {
                     const SizedBox(height: 4),
                     Row(
                       children: <Widget>[
-                        if (comment.author != 'You')
+                        // ✓ Show stars only if NOT the comment owner
+                        if (!isCommentOwner)
                           Row(
                             children: List.generate(
                               5,
@@ -499,7 +520,7 @@ class _CommentTile extends StatelessWidget {
                               ),
                             ),
                           ),
-                        if (comment.author != 'You') const SizedBox(width: 8),
+                        if (!isCommentOwner) const SizedBox(width: 8),
                         Text(
                           comment.formattedDate,
                           style: Theme.of(
@@ -511,7 +532,8 @@ class _CommentTile extends StatelessWidget {
                   ],
                 ),
               ),
-              if (comment.author == 'You')
+              // ✓ Show delete button only if current user is the comment owner
+              if (isCommentOwner)
                 IconButton(
                   icon: const Icon(Icons.close, size: 16),
                   onPressed: () {
