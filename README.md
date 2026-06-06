@@ -74,7 +74,3 @@ The project still uses mock data by default.
  *If you need help or any further contact please contact through my Gmail which locate on my Github profile, wishing you have a nice day.* 
 
 ## Notes
-
-- This is still in the beta version of developing so expecting bugs and non-functional button.
-- Remember to update Flutter and Dart to the latest version to make sure everything works.
-- This repo was created in 9th April 2026, as University final project by the team of 5
