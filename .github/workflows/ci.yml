@@ -1,0 +1,42 @@
+name: Build Android APK
+
+# 1. Khi nào kích hoạt?
+on:
+  push:
+    branches: [ "main", "master", "beta-main", "Scu" ]
+  pull_request:
+    branches: [ "main", "master", "beta-main", "Scu" ]
+
+# 2. Hành động cần làm
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest  # Mượn máy ảo Ubuntu
+
+    steps:
+      - name: 1. Kéo code về máy ảo
+        uses: actions/checkout@v3
+
+      - name: 2. Khởi động lò luyện Java (Rất cần để đúc Android)
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: 3. Cài đặt môi trường Flutter mới nhất
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 'any' 
+          channel: 'stable'
+          cache: true
+
+      - name: 4. Tải thư viện và đúc ra file APK
+        working-directory: ./mixcine_movie_app
+        run: |
+          flutter pub get
+          flutter build apk --release
+
+      - name: 5. Gói file APK lại và quăng lên giao diện GitHub
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-apk
+          path: mixcine_movie_app/build/app/outputs/flutter-apk/app-release.apk
