@@ -3,9 +3,9 @@ name: Flutter Web CI/CD
 # 1. Khi nào kích hoạt?
 on:
   push:
-    branches: [ "main", "master" ]
+    branches: [ "main", "master", "beta-main" ]
   pull_request:
-    branches: [ "main", "master" ]
+    branches: [ "main", "master", "beta-main" ]
 
 # 2. Hành động cần làm
 jobs:
