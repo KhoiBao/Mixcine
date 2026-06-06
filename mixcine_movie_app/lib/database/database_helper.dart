@@ -19,15 +19,31 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2, // ✓ Increased from 1 to 2
 
       onCreate: (db, version) async {
         await db.execute('''
         CREATE TABLE favorites(
           id INTEGER PRIMARY KEY AUTOINCREMENT,
-          movie_id INTEGER
+          user_id TEXT NOT NULL,
+          movie_id INTEGER NOT NULL,
+          UNIQUE(user_id, movie_id)
         )
         ''');
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          // ✓ Migration: Add user_id column and recreate table
+          await db.execute('DROP TABLE IF EXISTS favorites');
+          await db.execute('''
+          CREATE TABLE favorites(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id TEXT NOT NULL,
+            movie_id INTEGER NOT NULL,
+            UNIQUE(user_id, movie_id)
+          )
+          ''');
+        }
       },
     );
   }

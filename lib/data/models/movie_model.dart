@@ -1,4 +1,3 @@
-import '../../core/config/api_config.dart';
 import '../../core/config/app_config.dart';
 import '../../domain/entities/movie.dart';
 
@@ -48,19 +47,25 @@ class MovieModel {
 
     final genres = detailGenres is List
         ? detailGenres
-            .map((item) => (item as Map<String, dynamic>)['name']?.toString() ?? '')
-            .where((item) => item.isNotEmpty)
-            .toList()
+              .map(
+                (item) =>
+                    (item as Map<String, dynamic>)['name']?.toString() ?? '',
+              )
+              .where((item) => item.isNotEmpty)
+              .toList()
         : genreIds.map(_mapGenreId).where((item) => item.isNotEmpty).toList();
 
     return MovieModel(
       id: json['id'] as int? ?? 0,
-      title: json['title']?.toString() ?? json['name']?.toString() ?? 'Untitled',
+      title:
+          json['title']?.toString() ?? json['name']?.toString() ?? 'Untitled',
       overview: json['overview']?.toString().trim().isNotEmpty == true
           ? json['overview']?.toString() ?? ''
           : 'No description available for this movie yet.',
       posterUrl: _buildImageUrl(json['poster_path']),
-      backdropUrl: _buildBackdropUrl(json['backdrop_path'] ?? json['poster_path']),
+      backdropUrl: _buildBackdropUrl(
+        json['backdrop_path'] ?? json['poster_path'],
+      ),
       rating: (json['vote_average'] as num?)?.toDouble() ?? 0,
       releaseDate: json['release_date']?.toString() ?? '2026-01-01',
       genres: genres.isEmpty ? const ['Drama'] : genres.take(3).toList(),
@@ -75,7 +80,10 @@ class MovieModel {
 
     return MovieModel(
       id: id,
-      title: json['name']?.toString() ?? json['original_name']?.toString() ?? 'Untitled',
+      title:
+          json['name']?.toString() ??
+          json['original_name']?.toString() ??
+          'Untitled',
       overview: json['description']?.toString().trim().isNotEmpty == true
           ? json['description']?.toString() ?? ''
           : 'No description available for this movie yet.',

@@ -107,18 +107,21 @@ class MovieRepositoryImpl implements MovieRepository {
   // FAVORITES
 
   @override
-  Future<Set<int>> getFavoriteIds() {
-    return _favoritesLocalDataSource.getFavoriteIds();
+  Future<Set<int>> getFavoriteIds(String userId) {
+    // ✓ Add userId
+    return _favoritesLocalDataSource.getFavoriteIds(userId);
   }
 
   @override
-  Future<Set<int>> toggleFavorite(int movieId) {
-    return _favoritesLocalDataSource.toggleFavorite(movieId);
+  Future<Set<int>> toggleFavorite(String userId, int movieId) {
+    // ✓ Add userId
+    return _favoritesLocalDataSource.toggleFavorite(userId, movieId);
   }
 
   @override
-  Future<List<Movie>> getFavoriteMovies() async {
-    final ids = await getFavoriteIds();
+  Future<List<Movie>> getFavoriteMovies(String userId) async {
+    // ✓ Add userId
+    final ids = await getFavoriteIds(userId);
 
     if (ids.isEmpty) {
       return <Movie>[];

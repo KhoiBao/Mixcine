@@ -5,7 +5,8 @@ class GetFavoriteIdsUseCase {
 
   final MovieRepository _repository;
 
-  Future<Set<int>> call() {
-    return _repository.getFavoriteIds();
+  // ✓ Add userId parameter
+  Future<Set<int>> call(String userId) {
+    return _repository.getFavoriteIds(userId);
   }
 }
