@@ -154,6 +154,23 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     label: authState.isLoading ? 'Đang xử lý...' : 'Đăng kí',
                     onPressed: authState.isLoading ? null : _submit,
                   ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text("Đã có tài khoản?"),
+                      TextButton(
+                        onPressed: () {
+                          // Quay lại trang đăng nhập
+                          context.go('/login');
+                        },
+                        child: const Text(
+                          "Đăng nhập ngay",
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
