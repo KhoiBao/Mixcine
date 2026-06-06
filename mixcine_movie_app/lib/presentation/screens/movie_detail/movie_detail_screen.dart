@@ -482,6 +482,13 @@ class _CommentTile extends ConsumerWidget {
     final currentUserId = authState.user?.email;
     final isCommentOwner = comment.userId == currentUserId;
 
+    // ✓ Get current user's rating for this comment
+    final userCommentRating =
+        ref.watch(
+          commentRatingsProvider,
+        )['${comment.id}:${currentUserId ?? ''}'] ??
+        0;
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -506,19 +513,31 @@ class _CommentTile extends ConsumerWidget {
                     const SizedBox(height: 4),
                     Row(
                       children: <Widget>[
-                        // ✓ Show stars only if NOT the comment owner
+                        // ✓ Show interactive stars if NOT the comment owner
                         if (!isCommentOwner)
                           Row(
-                            children: List.generate(
-                              5,
-                              (index) => Icon(
-                                Icons.star_rounded,
-                                size: 14,
-                                color: index < comment.rating.toInt()
-                                    ? AppColors.primary
-                                    : Colors.grey,
-                              ),
-                            ),
+                            children: List.generate(5, (index) {
+                              final rating = index + 1;
+                              return GestureDetector(
+                                onTap: () {
+                                  // ✓ Rate comment
+                                  ref
+                                      .read(commentRatingsProvider.notifier)
+                                      .rateComment(
+                                        comment.id,
+                                        currentUserId ?? '',
+                                        rating.toDouble(),
+                                      );
+                                },
+                                child: Icon(
+                                  Icons.star_rounded,
+                                  size: 16,
+                                  color: rating <= userCommentRating
+                                      ? AppColors.primary
+                                      : Colors.grey,
+                                ),
+                              );
+                            }),
                           ),
                         if (!isCommentOwner) const SizedBox(width: 8),
                         Text(

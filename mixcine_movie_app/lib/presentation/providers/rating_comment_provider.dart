@@ -71,3 +71,42 @@ class MovieCommentsNotifier extends Notifier<Map<int, List<MovieComment>>> {
     state = newState;
   }
 }
+
+// Provider for storing user ratings for comments
+// Key format: "commentId:userId" → Rating (1-5 stars)
+final commentRatingsProvider =
+    NotifierProvider<CommentRatingsNotifier, Map<String, double>>(
+      CommentRatingsNotifier.new,
+    );
+
+class CommentRatingsNotifier extends Notifier<Map<String, double>> {
+  @override
+  Map<String, double> build() {
+    return {};
+  }
+
+  // ✓ Set rating for a comment by a user (1-5 stars)
+  void rateComment(String commentId, String userId, double rating) {
+    final key = '$commentId:$userId';
+    final newState = {...state};
+    newState[key] = rating.clamp(1, 5);
+    state = newState;
+  }
+
+  // ✓ Get rating for a comment by a user
+  double? getCommentRating(String commentId, String userId) {
+    final key = '$commentId:$userId';
+    return state[key];
+  }
+
+  // ✓ Get average rating for a comment
+  double getAverageRating(String commentId) {
+    final ratings = state.entries
+        .where((e) => e.key.startsWith('$commentId:'))
+        .map((e) => e.value)
+        .toList();
+
+    if (ratings.isEmpty) return 0;
+    return ratings.reduce((a, b) => a + b) / ratings.length;
+  }
+}

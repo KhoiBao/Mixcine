@@ -2,14 +2,27 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/entities/movie.dart';
 import 'app_providers.dart';
+import 'auth_provider.dart'; // ✓ Import auth provider
 
 class FavoriteIdsNotifier extends AsyncNotifier<Set<int>> {
   @override
   Future<Set<int>> build() async {
-    return ref.read(getFavoriteIdsUseCaseProvider).call();
+    // ✓ WATCH instead of READ - rebuild when auth state changes
+    final authState = ref.watch(authStateProvider);
+    final userId = authState.user?.email;
+
+    if (userId == null) return <int>{};
+
+    return ref.read(getFavoriteIdsUseCaseProvider).call(userId);
   }
 
   Future<void> toggle(int movieId) async {
+    // ✓ Get current user from auth provider
+    final authState = ref.read(authStateProvider);
+    final userId = authState.user?.email;
+
+    if (userId == null) return;
+
     final previous = state.value ?? <int>{};
     final optimistic = <int>{...previous};
 
@@ -22,7 +35,10 @@ class FavoriteIdsNotifier extends AsyncNotifier<Set<int>> {
     state = AsyncData(optimistic);
 
     try {
-      final updated = await ref.read(toggleFavoriteUseCaseProvider).call(movieId);
+      // ✓ Pass userId to toggle
+      final updated = await ref
+          .read(toggleFavoriteUseCaseProvider)
+          .call(userId, movieId);
       state = AsyncData(updated);
     } catch (_) {
       state = AsyncData(previous);
@@ -31,9 +47,20 @@ class FavoriteIdsNotifier extends AsyncNotifier<Set<int>> {
 }
 
 final favoriteIdsProvider =
-    AsyncNotifierProvider<FavoriteIdsNotifier, Set<int>>(FavoriteIdsNotifier.new);
+    AsyncNotifierProvider<FavoriteIdsNotifier, Set<int>>(
+      FavoriteIdsNotifier.new,
+    );
 
 final favoriteMoviesProvider = FutureProvider<List<Movie>>((ref) async {
+  // ✓ WATCH instead of READ - rebuild when auth state changes
+  final authState = ref.watch(authStateProvider);
+  final userId = authState.user?.email;
+
+  if (userId == null) return <Movie>[];
+
+  // ✓ Watch favoriteIdsProvider to trigger rebuild when favorites change
   ref.watch(favoriteIdsProvider);
-  return ref.read(getFavoriteMoviesUseCaseProvider).call();
+
+  // ✓ Pass userId to get favorite movies
+  return ref.read(getFavoriteMoviesUseCaseProvider).call(userId);
 });

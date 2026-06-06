@@ -5,7 +5,8 @@ class ToggleFavoriteUseCase {
 
   final MovieRepository _repository;
 
-  Future<Set<int>> call(int movieId) {
-    return _repository.toggleFavorite(movieId);
+  // ✓ Add userId parameter
+  Future<Set<int>> call(String userId, int movieId) {
+    return _repository.toggleFavorite(userId, movieId);
   }
 }
