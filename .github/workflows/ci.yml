@@ -25,6 +25,7 @@ jobs:
           cache: true # Tự động cache lại để lần sau chạy mượt hơn
 
       - name: 3. Tải thư viện và Build code ra bản Web
+        working-directory: ./mixcine_movie_app  # <--- BÍ QUYẾT: Ép con bot chui vào phòng code trước khi gõ lệnh
         run: |
           flutter pub get
           flutter build web

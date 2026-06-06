@@ -1,4 +1,5 @@
 import '../../core/config/app_config.dart';
+import '../../core/config/api_config.dart';
 import '../../domain/entities/movie.dart';
 
 class MovieModel {
@@ -26,7 +27,6 @@ class MovieModel {
   final int durationMinutes;
   final String videoUrl;
 
-  // ENTITY
   Movie toEntity() {
     return Movie(
       id: id,
@@ -42,116 +42,110 @@ class MovieModel {
     );
   }
 
-  // TMDB JSON
   factory MovieModel.fromTmdb(Map<String, dynamic> json) {
+    final detailGenres = json['genres'];
+    final genreIds = List<int>.from(json['genre_ids'] ?? const <int>[]);
+
+    final genres = detailGenres is List
+        ? detailGenres
+              .map(
+                (item) =>
+                    (item as Map<String, dynamic>)['name']?.toString() ?? '',
+              )
+              .where((item) => item.isNotEmpty)
+              .toList()
+        : genreIds.map(_mapGenreId).where((item) => item.isNotEmpty).toList();
+
+    final overviewStr = json['overview']?.toString() ?? '';
+
     return MovieModel(
-      id: json['id'] ?? 0,
-
-      title: json['title'] ?? json['name'] ?? 'Untitled',
-
-      overview: json['overview'] ?? '',
-
-      posterUrl: json['poster_path'] ?? '',
-
-      backdropUrl: json['backdrop_path'] ?? '',
-
-      rating: (json['vote_average'] ?? 0).toDouble(),
-
-      releaseDate: json['release_date'] ?? '',
-
-      genres: _extractGenres(json),
-
-      durationMinutes: json['runtime'] ?? 120,
-
+      id: json['id'] as int? ?? 0,
+      title:
+          json['title']?.toString() ?? json['name']?.toString() ?? 'Untitled',
+      overview: overviewStr.trim().isNotEmpty
+          ? overviewStr
+          : 'No description available for this movie yet.',
+      posterUrl: _buildImageUrl(json['poster_path']),
+      backdropUrl: _buildBackdropUrl(
+        json['backdrop_path'] ?? json['poster_path'],
+      ),
+      rating: (json['vote_average'] as num?)?.toDouble() ?? 0,
+      releaseDate: json['release_date']?.toString() ?? '2026-01-01',
+      genres: genres.isEmpty ? const ['Drama'] : genres.take(3).toList(),
+      durationMinutes: (json['runtime'] as num?)?.toInt() ?? 120,
       videoUrl: AppConfig.demoVideoUrl,
     );
   }
 
-  // VIETNAMESE API JSON
   factory MovieModel.fromVietnameseApi(Map<String, dynamic> json) {
     final slug = json['slug']?.toString() ?? '';
+    final id = slug.hashCode.abs(); // Generate a unique ID from slug
 
     return MovieModel(
-      id: slug.hashCode.abs(),
-
-      title: json['name'] ?? json['original_name'] ?? 'Untitled',
-
-      overview: json['description'] ?? '',
-
-      posterUrl: json['poster_url'] ?? '',
-
-      backdropUrl: json['thumb_url'] ?? '',
-
-      rating: 0,
-
-      releaseDate: json['created']?.toString().split('T').first ?? '',
-
-      genres: [json['language'] ?? 'Film'],
-
-      durationMinutes: _extractDuration(json['time']?.toString() ?? ''),
-
+      id: id,
+      title:
+          json['name']?.toString() ??
+          json['original_name']?.toString() ??
+          'Untitled',
+      overview: (() {
+        final desc = json['description']?.toString() ?? '';
+        return desc.trim().isNotEmpty
+            ? desc
+            : 'No description available for this movie yet.';
+      })(),
+      posterUrl: (json['poster_url'] as String?)?.trim() ?? '',
+      backdropUrl: (json['thumb_url'] as String?)?.trim() ?? '',
+      rating: 0.0, // Vietnamese API doesn't provide ratings
+      releaseDate: json['created']?.toString().split('T').first ?? '2026-01-01',
+      genres: [json['language']?.toString() ?? 'Film'].take(3).toList(),
+      durationMinutes: _extractDuration(json['time']?.toString() ?? '120 phút'),
       videoUrl: AppConfig.demoVideoUrl,
     );
   }
 
-  // SQLITE
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'title': title,
-      'overview': overview,
-      'poster_url': posterUrl,
-      'backdrop_url': backdropUrl,
-      'rating': rating,
-      'release_date': releaseDate,
-      'genres': genres.join(','),
-      'duration_minutes': durationMinutes,
-      'video_url': videoUrl,
-    };
-  }
-
-  factory MovieModel.fromMap(Map<String, dynamic> map) {
-    return MovieModel(
-      id: map['id'],
-
-      title: map['title'],
-
-      overview: map['overview'],
-
-      posterUrl: map['poster_url'],
-
-      backdropUrl: map['backdrop_url'],
-
-      rating: (map['rating'] as num).toDouble(),
-
-      releaseDate: map['release_date'],
-
-      genres: map['genres'].toString().split(','),
-
-      durationMinutes: map['duration_minutes'],
-
-      videoUrl: map['video_url'],
-    );
-  }
-
-  // HELPERS
-
-  static List<String> _extractGenres(Map<String, dynamic> json) {
-    final genres = json['genres'];
-
-    if (genres is List) {
-      return genres
-          .map((item) => item['name']?.toString() ?? '')
-          .where((item) => item.isNotEmpty)
-          .toList();
-    }
-
-    return <String>[];
-  }
-
-  static int _extractDuration(String text) {
-    final match = RegExp(r'(\d+)').firstMatch(text);
-
+  static int _extractDuration(String timeStr) {
+    // Extract number from strings like "42 Phút/Tập" or "120 phút"
+    final match = RegExp(r'(\d+)').firstMatch(timeStr);
     return match != null ? int.parse(match.group(1)!) : 120;
+  }
+
+  static String _buildImageUrl(dynamic path) {
+    final value = path?.toString() ?? '';
+    if (value.isEmpty) {
+      return AppConfig.fallbackPosterUrl;
+    }
+    return '${ApiConfig.tmdbImageBaseUrl}$value';
+  }
+
+  static String _buildBackdropUrl(dynamic path) {
+    final value = path?.toString() ?? '';
+    if (value.isEmpty) {
+      return AppConfig.fallbackBackdropUrl;
+    }
+    return '${ApiConfig.tmdbImageBaseUrl}$value';
+  }
+
+  static String _mapGenreId(int id) {
+    const genres = <int, String>{
+      12: 'Adventure',
+      14: 'Fantasy',
+      16: 'Animation',
+      18: 'Drama',
+      27: 'Horror',
+      28: 'Action',
+      35: 'Comedy',
+      36: 'History',
+      53: 'Thriller',
+      80: 'Crime',
+      99: 'Documentary',
+      878: 'Sci-Fi',
+      9648: 'Mystery',
+      10402: 'Music',
+      10749: 'Romance',
+      10751: 'Family',
+      10752: 'War',
+    };
+
+    return genres[id] ?? '';
   }
 }
