@@ -37,10 +37,17 @@ class MovieCommentsNotifier extends Notifier<Map<int, List<MovieComment>>> {
     return {};
   }
 
-  void addComment(int movieId, String author, String text, double rating) {
+  void addComment(
+    int movieId,
+    String userId,
+    String author,
+    String text,
+    double rating,
+  ) {
     final comment = MovieComment(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       movieId: movieId,
+      userId: userId, // ✓ Add userId for security
       author: author,
       text: text,
       rating: rating.clamp(0, 10),

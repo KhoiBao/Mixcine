@@ -2,6 +2,7 @@ class MovieComment {
   const MovieComment({
     required this.id,
     required this.movieId,
+    required this.userId,
     required this.author,
     required this.text,
     required this.rating,
@@ -10,7 +11,8 @@ class MovieComment {
 
   final String id;
   final int movieId;
-  final String author;
+  final String userId; // User ID who created this comment
+  final String author; // Display name
   final String text;
   final double rating;
   final DateTime createdAt;
