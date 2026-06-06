@@ -42,8 +42,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
   void _submit() async {
     if (!_formKey.currentState!.validate()) return;
-
-    final authState = ref.read(authStateProvider);
     final updatedUser = UserModel(
       email: _emailController.text.trim(),
       fullName: _fullNameController.text.trim(),
