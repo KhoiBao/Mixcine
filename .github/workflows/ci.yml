@@ -3,9 +3,9 @@ name: Build Android APK
 # 1. Khi nào kích hoạt?
 on:
   push:
-    branches: [ "main", "master", "beta-main" ]
+    branches: [ "main", "master", "beta-main", "Scu" ]
   pull_request:
-    branches: [ "main", "master", "beta-main" ]
+    branches: [ "main", "master", "beta-main", "Scu" ]
 
 # 2. Hành động cần làm
 jobs:
@@ -40,3 +40,14 @@ jobs:
         with:
           name: app-release-apk
           path: mixcine_movie_app/build/app/outputs/flutter-apk/app-release.apk
+
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: 5. Build và đẩy (Push) Docker Image lên Hub
+        uses: docker/build-push-action@v4
+        with:
+          context: ./mixcine_movie_app  # BẮT BUỘC TRỎ VÀO ĐÂY ĐỂ TÌM DOCKERFILE
+          push: true
+          tags: bimapbeo1001/scu-flutter-web:latest
+
