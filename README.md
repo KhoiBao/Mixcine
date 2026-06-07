@@ -74,3 +74,4 @@ The project still uses mock data by default.
  *If you need help or any further contact please contact through my Gmail which locate on my Github profile, wishing you have a nice day.* 
 
 ## Notes
+**Always Run `flutter pub get` to get necessary resources for the project to work!!!**

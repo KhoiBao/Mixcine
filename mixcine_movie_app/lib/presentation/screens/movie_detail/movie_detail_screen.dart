@@ -189,20 +189,6 @@ class MovieDetailScreen extends ConsumerWidget {
                           color: AppColors.surface,
                           borderRadius: BorderRadius.circular(22),
                         ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Text(
-                              'Developer note',
-                              style: Theme.of(context).textTheme.titleMedium,
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'This screen is built with reusable widgets and mock content so it can be restyled later against the exact Figma spacing.',
-                              style: Theme.of(context).textTheme.bodyMedium,
-                            ),
-                          ],
-                        ),
                       ),
                       const SizedBox(height: 24),
                       _RatingSection(movieId: movie.id, ref: ref),
