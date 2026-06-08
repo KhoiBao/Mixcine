@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../widgets/primary_button.dart';
 import '../../providers/auth_provider.dart';
@@ -14,6 +15,8 @@ class RegisterScreen extends ConsumerStatefulWidget {
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
+  final _fullNameController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();
   bool _obscure = true;
@@ -21,6 +24,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   @override
   void dispose() {
     _emailController.dispose();
+    _fullNameController.dispose();
+    _phoneController.dispose();
     _passwordController.dispose();
     _confirmController.dispose();
     super.dispose();
@@ -30,15 +35,19 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     final email = _emailController.text.trim();
+    final fullName = _fullNameController.text.trim();
+    final phone = _phoneController.text.trim();
     final password = _passwordController.text;
 
-    await ref.read(authStateProvider.notifier).register(email, password);
+    await ref
+        .read(authStateProvider.notifier)
+        .register(email, password, fullName, phone);
 
     if (!mounted) return;
 
     final state = ref.read(authStateProvider);
     if (state.token != null) {
-      Navigator.of(context).pushReplacementNamed('/dashboard');
+      context.go('/dashboard');
     } else if (state.error != null) {
       ScaffoldMessenger.of(
         context,
@@ -73,6 +82,31 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       }
                       if (!value.contains('@')) {
                         return 'Email không hợp lệ';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _fullNameController,
+                    decoration: const InputDecoration(labelText: 'Họ và tên'),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Họ và tên không được để trống';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _phoneController,
+                    keyboardType: TextInputType.phone,
+                    decoration: const InputDecoration(
+                      labelText: 'Số điện thoại',
+                    ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Số điện thoại không được để trống';
                       }
                       return null;
                     },
@@ -119,6 +153,23 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   PrimaryButton(
                     label: authState.isLoading ? 'Đang xử lý...' : 'Đăng kí',
                     onPressed: authState.isLoading ? null : _submit,
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text("Đã có tài khoản?"),
+                      TextButton(
+                        onPressed: () {
+                          // Quay lại trang đăng nhập
+                          context.go('/login');
+                        },
+                        child: const Text(
+                          "Đăng nhập ngay",
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

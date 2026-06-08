@@ -21,17 +21,20 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     _OnboardingItem(
       icon: Icons.movie_filter_outlined,
       title: 'Browse movies fast',
-      subtitle: 'Explore curated sections, discover titles, and open details with a clean dark UI.',
+      subtitle:
+          'Explore curated sections, discover titles, and open details with a clean dark UI.',
     ),
     _OnboardingItem(
       icon: Icons.favorite_outline,
       title: 'Save your favorites',
-      subtitle: 'Keep a personal list locally on the device and revisit it later anytime.',
+      subtitle:
+          'Keep a personal list locally on the device and revisit it later anytime.',
     ),
     _OnboardingItem(
       icon: Icons.ondemand_video_outlined,
       title: 'Play sample trailers',
-      subtitle: 'Open a simple video player screen and continue the full movie app flow.',
+      subtitle:
+          'Open a simple video player screen and continue the full movie app flow.',
     ),
   ];
 
@@ -40,7 +43,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     if (!mounted) {
       return;
     }
-    context.go('/dashboard');
+    context.go('/login');
   }
 
   @override
@@ -85,7 +88,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                             color: AppColors.surface,
                             borderRadius: BorderRadius.circular(36),
                           ),
-                          child: Icon(item.icon, size: 96, color: AppColors.primary),
+                          child: Icon(
+                            item.icon,
+                            size: 96,
+                            color: AppColors.primary,
+                          ),
                         ),
                         const SizedBox(height: 40),
                         Text(
@@ -114,7 +121,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     height: 8,
                     margin: const EdgeInsets.symmetric(horizontal: 4),
                     decoration: BoxDecoration(
-                      color: _currentPage == index ? AppColors.primary : AppColors.border,
+                      color: _currentPage == index
+                          ? AppColors.primary
+                          : AppColors.border,
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
@@ -123,7 +132,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               const SizedBox(height: 28),
               PrimaryButton(
                 label: isLastPage ? 'Get started' : 'Next',
-                icon: isLastPage ? Icons.rocket_launch_outlined : Icons.arrow_forward_rounded,
+                icon: isLastPage
+                    ? Icons.rocket_launch_outlined
+                    : Icons.arrow_forward_rounded,
                 onPressed: () async {
                   if (isLastPage) {
                     await _finish();

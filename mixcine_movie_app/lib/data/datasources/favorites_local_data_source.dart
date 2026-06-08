@@ -1,31 +1,43 @@
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sqflite/sqflite.dart';
+
+import '../../database/database_helper.dart';
 
 class FavoritesLocalDataSource {
-  FavoritesLocalDataSource() : _prefs = SharedPreferencesAsync();
+  final DatabaseHelper _dbHelper = DatabaseHelper();
 
-  final SharedPreferencesAsync _prefs;
+  // ✓ Add userId parameter
+  Future<Set<int>> getFavoriteIds(String userId) async {
+    final Database db = await _dbHelper.database;
 
-  static const String _favoriteIdsKey = 'favorite_movie_ids';
-
-  Future<Set<int>> getFavoriteIds() async {
-    final values = await _prefs.getStringList(_favoriteIdsKey) ?? <String>[];
-    return values.map(int.parse).toSet();
-  }
-
-  Future<Set<int>> toggleFavorite(int movieId) async {
-    final current = await getFavoriteIds();
-
-    if (current.contains(movieId)) {
-      current.remove(movieId);
-    } else {
-      current.add(movieId);
-    }
-
-    await _prefs.setStringList(
-      _favoriteIdsKey,
-      current.map((item) => item.toString()).toList(),
+    final maps = await db.query(
+      'favorites',
+      where: 'user_id = ?', // ✓ Filter by user_id
+      whereArgs: [userId],
     );
 
-    return current;
+    return maps.map((item) => item['movie_id'] as int).toSet();
+  }
+
+  // ✓ Add userId parameter
+  Future<Set<int>> toggleFavorite(String userId, int movieId) async {
+    final Database db = await _dbHelper.database;
+
+    final existing = await db.query(
+      'favorites',
+      where: 'user_id = ? AND movie_id = ?', // ✓ Filter by both
+      whereArgs: [userId, movieId],
+    );
+
+    if (existing.isNotEmpty) {
+      await db.delete(
+        'favorites',
+        where: 'user_id = ? AND movie_id = ?',
+        whereArgs: [userId, movieId],
+      );
+    } else {
+      await db.insert('favorites', {'user_id': userId, 'movie_id': movieId});
+    }
+
+    return await getFavoriteIds(userId);
   }
 }

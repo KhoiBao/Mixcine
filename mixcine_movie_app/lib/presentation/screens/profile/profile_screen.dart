@@ -1,17 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/config/app_branding.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/favorites_provider.dart';
 import '../../widgets/branded_screen_header.dart';
+import '../../widgets/primary_button.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final favorites = ref.watch(favoriteMoviesProvider).value ?? const <dynamic>[];
+    final authState = ref.watch(authStateProvider);
+    final user = authState.user;
+    final favorites =
+        ref.watch(favoriteMoviesProvider).value ?? const <dynamic>[];
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -40,17 +46,24 @@ class ProfileScreen extends ConsumerWidget {
                       color: AppColors.primary.withValues(alpha: 0.16),
                       borderRadius: BorderRadius.circular(22),
                     ),
-                    child: const Icon(Icons.person_outline, size: 34, color: AppColors.primary),
+                    child: const Icon(
+                      Icons.person_outline,
+                      size: 34,
+                      color: AppColors.primary,
+                    ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        Text('Người Tày', style: Theme.of(context).textTheme.titleLarge),
+                        Text(
+                          user?.fullName ?? user?.email ?? 'User',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
                         const SizedBox(height: 4),
                         Text(
-                          'Sinh viên lớp LTDĐ',
+                          user?.phoneNumber ?? 'No phone',
                           style: Theme.of(context).textTheme.bodyMedium,
                         ),
                       ],
@@ -82,9 +95,32 @@ class ProfileScreen extends ConsumerWidget {
             const SizedBox(height: 24),
             Text('Settings', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 12),
-            const _ProfileTile(icon: Icons.person_outline, title: 'Edit profile', subtitle: ''),
-            const _ProfileTile(icon: Icons.notifications_none, title: 'Notifications', subtitle: ''),
-            const _ProfileTile(icon: Icons.info_outline, title: 'Về app', subtitle: AppBranding.aboutLine),
+            _ProfileTile(
+              icon: Icons.person_outline,
+              title: 'Edit profile',
+              subtitle: '',
+              onTap: () => context.push('/edit-profile'),
+            ),
+            const _ProfileTile(
+              icon: Icons.notifications_none,
+              title: 'Notifications',
+              subtitle: '',
+            ),
+            const _ProfileTile(
+              icon: Icons.info_outline,
+              title: 'Về app',
+              subtitle: AppBranding.aboutLine,
+            ),
+            const SizedBox(height: 24),
+            PrimaryButton(
+              label: 'Đăng xuất',
+              onPressed: () async {
+                await ref.read(authStateProvider.notifier).logout();
+                if (context.mounted) {
+                  context.go('/login');
+                }
+              },
+            ),
           ],
         ),
       ),
@@ -130,11 +166,13 @@ class _ProfileTile extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.subtitle,
+    this.onTap,
   });
 
   final IconData icon;
   final String title;
   final String subtitle;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -145,6 +183,7 @@ class _ProfileTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
       ),
       child: ListTile(
+        onTap: onTap,
         leading: Icon(icon, color: AppColors.primary),
         title: Text(title),
         subtitle: Text(subtitle),

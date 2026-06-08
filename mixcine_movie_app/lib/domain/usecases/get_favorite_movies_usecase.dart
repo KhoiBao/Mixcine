@@ -6,7 +6,8 @@ class GetFavoriteMoviesUseCase {
 
   final MovieRepository _repository;
 
-  Future<List<Movie>> call() {
-    return _repository.getFavoriteMovies();
+  // ✓ Add userId parameter
+  Future<List<Movie>> call(String userId) {
+    return _repository.getFavoriteMovies(userId);
   }
 }
