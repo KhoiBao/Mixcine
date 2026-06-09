@@ -10,6 +10,7 @@ class Movie {
     required this.genres,
     required this.durationMinutes,
     required this.videoUrl,
+    required this.requiredTier,
   });
 
   final int id;
@@ -22,6 +23,8 @@ class Movie {
   final List<String> genres;
   final int durationMinutes;
   final String videoUrl;
+  final int requiredTier;
+
 
   String get year => releaseDate.length >= 4 ? releaseDate.substring(0, 4) : releaseDate;
 

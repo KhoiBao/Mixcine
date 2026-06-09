@@ -45,9 +45,9 @@ class MovieRemoteDataSource {
   }
 
   Future<List<MovieModel>> _fetchMovieList(
-    String path, {
-    required int page,
-  }) async {
+      String path, {
+        required int page,
+      }) async {
     try {
       final response = await _dio.get(
         path,
@@ -84,6 +84,7 @@ class MovieRemoteDataSource {
       genres: const ['Film'],
       durationMinutes: 120,
       videoUrl: AppConfig.demoVideoUrl,
+      requiredTier: 1, // Đã fix: Thêm dòng này để thỏa mãn hàm khởi tạo
     );
   }
 }

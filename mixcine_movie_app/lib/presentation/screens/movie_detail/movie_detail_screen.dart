@@ -11,6 +11,7 @@ import '../../providers/movie_detail_provider.dart';
 import '../../providers/rating_comment_provider.dart';
 import '../../widgets/async_value_builder.dart';
 import '../../widgets/primary_button.dart';
+import '../../providers/content_access_provider.dart';
 
 class MovieDetailScreen extends ConsumerWidget {
   const MovieDetailScreen({required this.movieId, super.key});
@@ -21,6 +22,10 @@ class MovieDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final movieState = ref.watch(movieDetailProvider(movieId));
     final favoriteIds = ref.watch(favoriteIdsProvider).value ?? <int>{};
+    
+    // LẤY TRỰC TIẾP TIER TỪ PROVIDER (ĐÃ FIX)
+    final contentAccess = ref.watch(contentAccessProvider);
+    final int userTier = contentAccess.userTier;
 
     return Scaffold(
       body: AsyncValueBuilder(
@@ -124,19 +129,19 @@ class MovieDetailScreen extends ConsumerWidget {
                                   children: movie.genres
                                       .map(
                                         (genre) => Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 10,
-                                            vertical: 6,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: AppColors.surface,
-                                            borderRadius: BorderRadius.circular(
-                                              30,
-                                            ),
-                                          ),
-                                          child: Text(genre),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.surface,
+                                        borderRadius: BorderRadius.circular(
+                                          30,
                                         ),
-                                      )
+                                      ),
+                                      child: Text(genre),
+                                    ),
+                                  )
                                       .toList(),
                                 ),
                               ],
@@ -151,8 +156,41 @@ class MovieDetailScreen extends ConsumerWidget {
                             child: PrimaryButton(
                               label: 'Watch now',
                               icon: Icons.play_arrow_rounded,
-                              onPressed: () =>
-                                  context.push('/player/${movie.id}'),
+                              onPressed: () {
+                                // KIỂM TRA QUYỀN TRUY CẬP PHIM
+                                if (userTier < movie.requiredTier) {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) => AlertDialog(
+                                      backgroundColor: AppColors.surface,
+                                      title: const Text('Nội dung Premium'),
+                                      content: Text(movie.requiredTier == 2
+                                          ? 'Phim này yêu cầu gói VIP (720p). Hãy nâng cấp nhé!'
+                                          : 'Phim bom tấn này yêu cầu gói Vippro. Hãy nâng cấp nhé!'),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => context.pop(),
+                                          child: const Text('Để sau',
+                                              style: TextStyle(
+                                                  color: Colors.white)),
+                                        ),
+                                        FilledButton(
+                                          onPressed: () {
+                                            context.pop();
+                                            context.push('/subscription');
+                                          },
+                                          style: FilledButton.styleFrom(
+                                              backgroundColor:
+                                              AppColors.primary),
+                                          child: const Text('Nâng cấp ngay'),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                } else {
+                                  context.push('/player/${movie.id}');
+                                }
+                              },
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -180,15 +218,6 @@ class MovieDetailScreen extends ConsumerWidget {
                       Text(
                         movie.overview,
                         style: Theme.of(context).textTheme.bodyLarge,
-                      ),
-                      const SizedBox(height: 24),
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(18),
-                        decoration: BoxDecoration(
-                          color: AppColors.surface,
-                          borderRadius: BorderRadius.circular(22),
-                        ),
                       ),
                       const SizedBox(height: 24),
                       _RatingSection(movieId: movie.id, ref: ref),
@@ -322,7 +351,6 @@ class _CommentsSectionState extends ConsumerState<_CommentsSection> {
   }
 
   void _submitComment() {
-    // ✓ Get current user from auth provider
     final authState = ref.read(authStateProvider);
     if (authState.user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -338,19 +366,19 @@ class _CommentsSectionState extends ConsumerState<_CommentsSection> {
       return;
     }
 
-    final userId = authState.user!.email; // ✓ Use email as unique user ID
+    final userId = authState.user!.email;
     final author =
-        authState.user!.fullName ?? authState.user!.email; // ✓ Display name
+        authState.user!.fullName ?? authState.user!.email;
 
     ref
         .read(movieCommentsProvider.notifier)
         .addComment(
-          widget.movieId,
-          userId,
-          author,
-          _commentController.text,
-          0, // Không cho phép rating comment của bản thân
-        );
+      widget.movieId,
+      userId,
+      author,
+      _commentController.text,
+      0,
+    );
 
     _commentController.clear();
 
@@ -368,7 +396,6 @@ class _CommentsSectionState extends ConsumerState<_CommentsSection> {
       children: <Widget>[
         Text('Comments', style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 16),
-        // Add Comment Form
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -417,7 +444,6 @@ class _CommentsSectionState extends ConsumerState<_CommentsSection> {
           ),
         ),
         const SizedBox(height: 16),
-        // Comments List
         if (comments.isEmpty)
           Center(
             child: Padding(
@@ -463,17 +489,15 @@ class _CommentTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // ✓ Get current user from auth provider
     final authState = ref.watch(authStateProvider);
     final currentUserId = authState.user?.email;
     final isCommentOwner = comment.userId == currentUserId;
 
-    // ✓ Get current user's rating for this comment
     final userCommentRating =
         ref.watch(
           commentRatingsProvider,
         )['${comment.id}:${currentUserId ?? ''}'] ??
-        0;
+            0;
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -499,21 +523,19 @@ class _CommentTile extends ConsumerWidget {
                     const SizedBox(height: 4),
                     Row(
                       children: <Widget>[
-                        // ✓ Show interactive stars if NOT the comment owner
                         if (!isCommentOwner)
                           Row(
                             children: List.generate(5, (index) {
                               final rating = index + 1;
                               return GestureDetector(
                                 onTap: () {
-                                  // ✓ Rate comment
                                   ref
                                       .read(commentRatingsProvider.notifier)
                                       .rateComment(
-                                        comment.id,
-                                        currentUserId ?? '',
-                                        rating.toDouble(),
-                                      );
+                                    comment.id,
+                                    currentUserId ?? '',
+                                    rating.toDouble(),
+                                  );
                                 },
                                 child: Icon(
                                   Icons.star_rounded,
@@ -537,7 +559,6 @@ class _CommentTile extends ConsumerWidget {
                   ],
                 ),
               ),
-              // ✓ Show delete button only if current user is the comment owner
               if (isCommentOwner)
                 IconButton(
                   icon: const Icon(Icons.close, size: 16),

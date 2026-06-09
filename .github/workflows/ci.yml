@@ -3,9 +3,9 @@ name: Build Android APK
 # 1. Khi nào kích hoạt?
 on:
   push:
-    branches: [ "main", "master", "beta-main", "Scu" ]
+    branches: [ "main", "master", "beta-main"]
   pull_request:
-    branches: [ "main", "master", "beta-main", "Scu" ]
+    branches: [ "main", "master", "beta-main"]
 
 # 2. Hành động cần làm
 jobs:

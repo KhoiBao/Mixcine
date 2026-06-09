@@ -4,6 +4,9 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
+<<<<<<< HEAD
+    <list default="true" id="cef8b0dc-2b61-4bc2-853f-93256d9d6353" name="Changes" comment="" />
+=======
     <list default="true" id="cef8b0dc-2b61-4bc2-853f-93256d9d6353" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/Mixcine.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Mixcine.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" afterDir="false" />
@@ -17,6 +20,7 @@
       <change beforePath="$PROJECT_DIR$/mixcine_movie_app/pubspec.lock" beforeDir="false" afterPath="$PROJECT_DIR$/mixcine_movie_app/pubspec.lock" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mixcine_movie_app/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/mixcine_movie_app/pubspec.yaml" afterDir="false" />
     </list>
+>>>>>>> 06669290a3e041ec0062e868c339d57d272922ea
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -36,6 +40,26 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
+<<<<<<< HEAD
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Flutter.main.executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.cidr.known.project.marker": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.readMode.enableVisualFormatting": "true",
+    "cf.first.check.clang-format": "false",
+    "cidr.known.project.marker": "true",
+    "dart.analysis.tool.window.visible": "false",
+    "git-widget-placeholder": "Scu",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "D:/code/Nam3_HK2_25-26/LT_DD/Mixcine",
+    "settings.editor.selected.configurable": "dart.settings",
+    "show.migrate.to.gradle.popup": "false"
+  }
+}]]></component>
+=======
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
     &quot;Flutter.main.executor&quot;: &quot;Run&quot;,
@@ -64,6 +88,7 @@
       <recent name="K:\mixcine_movie_app_updated\mixcine_movie_app\lib\core\config" />
     </key>
   </component>
+>>>>>>> 06669290a3e041ec0062e868c339d57d272922ea
   <component name="RunManager">
     <configuration name="main" type="FlutterRunConfigurationType" factoryName="Flutter">
       <option name="filePath" value="$PROJECT_DIR$/mixcine_movie_app/lib/main.dart" />
