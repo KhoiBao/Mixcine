@@ -11,6 +11,7 @@ import '../../providers/movie_detail_provider.dart';
 import '../../providers/rating_comment_provider.dart';
 import '../../widgets/async_value_builder.dart';
 import '../../widgets/primary_button.dart';
+import '../../providers/content_access_provider.dart'; // Import provider phân quyền
 
 class MovieDetailScreen extends ConsumerWidget {
   const MovieDetailScreen({required this.movieId, super.key});
@@ -21,6 +22,8 @@ class MovieDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final movieState = ref.watch(movieDetailProvider(movieId));
     final favoriteIds = ref.watch(favoriteIdsProvider).value ?? <int>{};
+    // Lấy thông tin phân quyền của user hiện tại
+    final contentAccess = ref.watch(contentAccessProvider);
 
     return Scaffold(
       body: AsyncValueBuilder(
@@ -124,19 +127,19 @@ class MovieDetailScreen extends ConsumerWidget {
                                   children: movie.genres
                                       .map(
                                         (genre) => Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 10,
-                                            vertical: 6,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: AppColors.surface,
-                                            borderRadius: BorderRadius.circular(
-                                              30,
-                                            ),
-                                          ),
-                                          child: Text(genre),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.surface,
+                                        borderRadius: BorderRadius.circular(
+                                          30,
                                         ),
-                                      )
+                                      ),
+                                      child: Text(genre),
+                                    ),
+                                  )
                                       .toList(),
                                 ),
                               ],
@@ -148,11 +151,43 @@ class MovieDetailScreen extends ConsumerWidget {
                       Row(
                         children: <Widget>[
                           Expanded(
+                            // Đã bọc logic Content Lock vào đây
                             child: PrimaryButton(
                               label: 'Watch now',
                               icon: Icons.play_arrow_rounded,
-                              onPressed: () =>
-                                  context.push('/player/${movie.id}'),
+                              onPressed: () {
+                                if (!contentAccess.canWatch720p) {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) => AlertDialog(
+                                      backgroundColor: AppColors.surface,
+                                      title: const Text('Nội dung Premium'),
+                                      content: const Text(
+                                          'Bro cần nâng cấp gói VIP hoặc Vippro để xem bộ phim này nhé!'),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => context.pop(),
+                                          child: const Text('Để sau',
+                                              style: TextStyle(
+                                                  color: Colors.white)),
+                                        ),
+                                        FilledButton(
+                                          onPressed: () {
+                                            context.pop();
+                                            context.push('/subscription');
+                                          },
+                                          style: FilledButton.styleFrom(
+                                              backgroundColor:
+                                              AppColors.primary),
+                                          child: const Text('Nâng cấp ngay'),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                } else {
+                                  context.push('/player/${movie.id}');
+                                }
+                              },
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -345,12 +380,12 @@ class _CommentsSectionState extends ConsumerState<_CommentsSection> {
     ref
         .read(movieCommentsProvider.notifier)
         .addComment(
-          widget.movieId,
-          userId,
-          author,
-          _commentController.text,
-          0, // Không cho phép rating comment của bản thân
-        );
+      widget.movieId,
+      userId,
+      author,
+      _commentController.text,
+      0, // Không cho phép rating comment của bản thân
+    );
 
     _commentController.clear();
 
@@ -473,7 +508,7 @@ class _CommentTile extends ConsumerWidget {
         ref.watch(
           commentRatingsProvider,
         )['${comment.id}:${currentUserId ?? ''}'] ??
-        0;
+            0;
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -510,10 +545,10 @@ class _CommentTile extends ConsumerWidget {
                                   ref
                                       .read(commentRatingsProvider.notifier)
                                       .rateComment(
-                                        comment.id,
-                                        currentUserId ?? '',
-                                        rating.toDouble(),
-                                      );
+                                    comment.id,
+                                    currentUserId ?? '',
+                                    rating.toDouble(),
+                                  );
                                 },
                                 child: Icon(
                                   Icons.star_rounded,
