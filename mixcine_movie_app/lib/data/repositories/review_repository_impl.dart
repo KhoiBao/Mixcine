@@ -9,33 +9,49 @@ class ReviewRepositoryImpl implements ReviewRepository {
   final ReviewLocalDataSource _localDataSource;
 
   @override
-  Future<void> addReview(int movieId, String comment, double rating) {
-    return _localDataSource.addReview(movieId, comment, rating);
+  // Cập nhật tham số đầu vào
+  Future<void> addReview(
+    int movieId,
+    String userId,
+    String authorName,
+    String comment,
+    double rating,
+  ) {
+    // Truyền đủ 5 tham số xuống Data Source
+    return _localDataSource.addReview(
+      movieId,
+      userId,
+      authorName,
+      comment,
+      rating,
+    );
   }
 
   @override
   Future<List<MovieComment>> getReviewsForMovie(int movieId) async {
     final models = await _localDataSource.getReviewsForMovie(movieId);
 
-    // Map từ Model (Data) sang Entity (Domain)
     return models
         .map(
           (model) => MovieComment(
-            id: model.id.toString(), // Entity của bạn đang dùng String cho ID
+            id: model.id.toString(),
             movieId: model.movieId,
-            userId: 'local_user', // Tạm thời hardcode nếu LocalDB chưa lưu User
-            author: 'Guest', // Tạm thời hardcode
+            userId: model.userId, // Cập nhật lấy userId thật từ DB
+            author: model.authorName, // Cập nhật lấy authorName thật từ DB
             text: model.comment,
             rating: model.rating,
             createdAt:
-                DateTime.now(), // SQLite chưa lưu ngày tháng, tạm lấy giờ hiện tại
+                DateTime.tryParse(model.createdAt) ??
+                DateTime.now(), // Parse chuỗi thời gian về DateTime
           ),
         )
         .toList();
   }
 
   @override
-  Future<void> deleteReview(int reviewId) {
-    return _localDataSource.deleteReview(reviewId);
+  // Cập nhật tham số đầu vào
+  Future<void> deleteReview(int reviewId, String currentUserId) {
+    // Truyền đủ 2 tham số xuống Data Source
+    return _localDataSource.deleteReview(reviewId, currentUserId);
   }
 }

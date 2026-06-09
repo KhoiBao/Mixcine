@@ -10,19 +10,22 @@ class WatchHistoryRepositoryImpl implements WatchHistoryRepository {
   final WatchHistoryLocalDataSource _localDataSource;
 
   @override
-  Future<void> saveWatchProgress(int movieId, int progress) {
-    return _localDataSource.saveWatchProgress(movieId, progress);
+  // Thêm userId
+  Future<void> saveWatchProgress(String userId, int movieId, int progress) {
+    return _localDataSource.saveWatchProgress(userId, movieId, progress);
   }
 
   @override
-  Future<int?> getWatchProgress(int movieId) {
-    return _localDataSource.getWatchProgress(movieId);
+  // Thêm userId
+  Future<int?> getWatchProgress(String userId, int movieId) {
+    return _localDataSource.getWatchProgress(userId, movieId);
   }
 
   @override
-  Future<List<WatchHistory>> getAllWatchHistory() async {
-    final models = await _localDataSource.getAllWatchHistory();
-    // Chuyển đổi từ Model (Data) sang Entity (Domain)
+  // Thêm userId
+  Future<List<WatchHistory>> getAllWatchHistory(String userId) async {
+    final models = await _localDataSource.getAllWatchHistory(userId);
+
     return models
         .map(
           (model) => WatchHistory(
@@ -35,7 +38,8 @@ class WatchHistoryRepositoryImpl implements WatchHistoryRepository {
   }
 
   @override
-  Future<void> removeWatchHistory(int movieId) {
-    return _localDataSource.removeWatchHistory(movieId);
+  // Thêm userId
+  Future<void> removeWatchHistory(String userId, int movieId) {
+    return _localDataSource.removeWatchHistory(userId, movieId);
   }
 }

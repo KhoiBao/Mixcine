@@ -1,23 +1,33 @@
 import 'package:sqflite/sqflite.dart';
 
-import '../../database/database_helper.dart'; // Thay đổi đường dẫn import cho khớp với cấu trúc dự án của bạn
+import '../../database/database_helper.dart';
 import '../models/review_model.dart';
 
 class ReviewLocalDataSource {
   final DatabaseHelper _dbHelper = DatabaseHelper();
 
-  // Thêm một đánh giá mới
-  Future<void> addReview(int movieId, String comment, double rating) async {
+  // Đã bổ sung userId, authorName và created_at
+  Future<void> addReview(
+    int movieId,
+    String userId,
+    String authorName,
+    String comment,
+    double rating,
+  ) async {
     final Database db = await _dbHelper.database;
 
     await db.insert('reviews', {
       'movie_id': movieId,
+      'user_id': userId,
+      'author_name': authorName,
       'comment': comment,
       'rating': rating,
+      'created_at': DateTime.now()
+          .toIso8601String(), // Tự động lấy giờ hiện tại
     });
   }
 
-  // Lấy danh sách toàn bộ đánh giá của một bộ phim cụ thể
+  // Lấy bình luận của một phim (giữ nguyên logic nhưng model ánh xạ đã có đủ trường)
   Future<List<ReviewModel>> getReviewsForMovie(int movieId) async {
     final Database db = await _dbHelper.database;
 
@@ -25,16 +35,20 @@ class ReviewLocalDataSource {
       'reviews',
       where: 'movie_id = ?',
       whereArgs: [movieId],
-      orderBy: 'id DESC', // Đưa các bình luận mới nhất lên đầu tiên
+      orderBy: 'created_at DESC', // Sắp xếp theo thời gian mới nhất thay vì ID
     );
 
     return maps.map((map) => ReviewModel.fromMap(map)).toList();
   }
 
-  // Xóa một đánh giá cụ thể dựa trên ID của đánh giá đó
-  Future<void> deleteReview(int reviewId) async {
+  // (Tùy chọn) Có thể kiểm tra thêm userId để đảm bảo chỉ user tạo bình luận mới được xóa
+  Future<void> deleteReview(int reviewId, String currentUserId) async {
     final Database db = await _dbHelper.database;
 
-    await db.delete('reviews', where: 'id = ?', whereArgs: [reviewId]);
+    await db.delete(
+      'reviews',
+      where: 'id = ? AND user_id = ?',
+      whereArgs: [reviewId, currentUserId],
+    );
   }
 }
