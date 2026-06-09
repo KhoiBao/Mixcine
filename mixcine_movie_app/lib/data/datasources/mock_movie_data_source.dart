@@ -16,6 +16,7 @@ class MockMovieDataSource {
       genres: ['Sci-Fi', 'Adventure'],
       durationMinutes: 155,
       videoUrl: AppConfig.demoVideoUrl,
+      requiredTier: 3, // Phim Vippro
     ),
     MovieModel(
       id: 2,
@@ -28,6 +29,7 @@ class MockMovieDataSource {
       genres: ['Thriller', 'Crime'],
       durationMinutes: 121,
       videoUrl: AppConfig.demoVideoUrl,
+      requiredTier: 2, // Phim VIP
     ),
     MovieModel(
       id: 3,
@@ -40,6 +42,7 @@ class MockMovieDataSource {
       genres: ['Sci-Fi', 'Mystery'],
       durationMinutes: 138,
       videoUrl: AppConfig.demoVideoUrl,
+      requiredTier: 1, // Phim Thường
     ),
     MovieModel(
       id: 4,
@@ -52,6 +55,7 @@ class MockMovieDataSource {
       genres: ['Drama', 'Romance'],
       durationMinutes: 110,
       videoUrl: AppConfig.demoVideoUrl,
+      requiredTier: 1, // Phim Thường
     ),
     MovieModel(
       id: 5,
@@ -64,6 +68,7 @@ class MockMovieDataSource {
       genres: ['Sci-Fi', 'Drama'],
       durationMinutes: 147,
       videoUrl: AppConfig.demoVideoUrl,
+      requiredTier: 3, // Phim Vippro
     ),
     MovieModel(
       id: 6,
@@ -76,6 +81,7 @@ class MockMovieDataSource {
       genres: ['Drama', 'History'],
       durationMinutes: 132,
       videoUrl: AppConfig.demoVideoUrl,
+      requiredTier: 2, // Phim VIP
     ),
     MovieModel(
       id: 7,
@@ -88,6 +94,7 @@ class MockMovieDataSource {
       genres: ['Romance', 'Drama'],
       durationMinutes: 104,
       videoUrl: AppConfig.demoVideoUrl,
+      requiredTier: 1, // Phim Thường
     ),
     MovieModel(
       id: 8,
@@ -100,6 +107,7 @@ class MockMovieDataSource {
       genres: ['Comedy', 'Fantasy'],
       durationMinutes: 99,
       videoUrl: AppConfig.demoVideoUrl,
+      requiredTier: 1, // Phim Thường
     ),
     MovieModel(
       id: 9,
@@ -112,6 +120,7 @@ class MockMovieDataSource {
       genres: ['Action', 'Thriller'],
       durationMinutes: 128,
       videoUrl: AppConfig.demoVideoUrl,
+      requiredTier: 2, // Phim VIP
     ),
     MovieModel(
       id: 10,
@@ -124,6 +133,7 @@ class MockMovieDataSource {
       genres: ['Drama', 'Family'],
       durationMinutes: 113,
       videoUrl: AppConfig.demoVideoUrl,
+      requiredTier: 1, // Phim Thường
     ),
     MovieModel(
       id: 11,
@@ -136,6 +146,7 @@ class MockMovieDataSource {
       genres: ['Adventure', 'Sci-Fi'],
       durationMinutes: 143,
       videoUrl: AppConfig.demoVideoUrl,
+      requiredTier: 3, // Phim Vippro
     ),
     MovieModel(
       id: 12,
@@ -148,6 +159,7 @@ class MockMovieDataSource {
       genres: ['Mystery', 'Thriller'],
       durationMinutes: 118,
       videoUrl: AppConfig.demoVideoUrl,
+      requiredTier: 2, // Phim VIP
     ),
   ];
 
@@ -183,7 +195,7 @@ class MockMovieDataSource {
     return _movies.where((movie) {
       final titleMatch = movie.title.toLowerCase().contains(normalized);
       final genreMatch = movie.genres.any(
-        (genre) => genre.toLowerCase().contains(normalized),
+            (genre) => genre.toLowerCase().contains(normalized),
       );
       return titleMatch || genreMatch;
     }).toList();

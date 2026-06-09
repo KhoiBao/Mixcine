@@ -4,8 +4,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/config/app_branding.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../domain/entities/payment_plan.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/favorites_provider.dart';
+import '../../providers/subscription_provider.dart';
 import '../../widgets/branded_screen_header.dart';
 import '../../widgets/primary_button.dart';
 
@@ -18,6 +20,22 @@ class ProfileScreen extends ConsumerWidget {
     final user = authState.user;
     final favorites =
         ref.watch(favoriteMoviesProvider).value ?? const <dynamic>[];
+
+    // 🚀 LOGIC LẤY THÔNG TIN GÓI CƯỚC ĐỂ VẼ HUY HIỆU
+    final subscription = ref.watch(subscriptionProvider);
+    final isPremium = subscription?.isActive == true && subscription?.plan == PaymentPlan.vipPro;
+    final isVip = subscription?.isActive == true && subscription?.plan == PaymentPlan.vip;
+
+    String planName = 'Cày chay (Free)';
+    Color planColor = Colors.grey;
+
+    if (isPremium) {
+      planName = 'Vippro 4K';
+      planColor = Colors.purpleAccent; // Màu tím hoàng gia cho Vippro
+    } else if (isVip) {
+      planName = 'VIP 720p';
+      planColor = Colors.orangeAccent; // Màu cam cháy cho VIP
+    }
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -65,6 +83,24 @@ class ProfileScreen extends ConsumerWidget {
                         Text(
                           user?.phoneNumber ?? 'No phone',
                           style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                        const SizedBox(height: 8),
+                        // 🚀 HUY HIỆU CẤP BẬC HIỂN THỊ TẠI ĐÂY
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: planColor.withOpacity(0.2),
+                            border: Border.all(color: planColor),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            planName,
+                            style: TextStyle(
+                              color: planColor,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
                         ),
                       ],
                     ),
