@@ -1,7 +1,7 @@
 class AppConfig {
   const AppConfig._();
 
-  static const bool useMockData = false;
+  static const bool useMockData = true;
   // mockdata = true: using already equipped film
   // mockdata = false: using real API data, configure API key in ApiConfig
   static const int pageSize = 6;
