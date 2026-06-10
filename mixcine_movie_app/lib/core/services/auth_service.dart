@@ -1,70 +1,78 @@
 import 'package:mixcine_movie_app/data/models/user_model.dart';
+import 'package:mixcine_movie_app/data/datasources/auth_remote_data_source.dart';
 
-/// A minimal mock auth service. Replace with real network calls in production.
 class AuthService {
-  // Simulate network delay
-  final Duration _delay = const Duration(milliseconds: 700);
+  final AuthRemoteDataSource _dataSource = AuthRemoteDataSource();
 
-  /// Mock login. Accepts any email that contains '@' and password length >= 6.
-  /// Returns a tuple of (token, user) on success.
   Future<(String, UserModel)> login({
     required String email,
     required String password,
   }) async {
-    await Future.delayed(_delay);
-
-    if (!email.contains('@') || password.length < 6) {
-      throw AuthException('Invalid credentials');
+    try {
+      final userData = await _dataSource.login(email, password);
+      
+      // Tạo token dựa trên email để đồng bộ
+      final token = 'token_${email.hashCode}';
+      
+      final user = UserModel(
+        id: userData['id'].toString(),
+        email: userData['email'],
+        fullName: userData['full_name'],
+        phoneNumber: userData['phone_number'],
+        plan: userData['plan'], 
+      );
+      
+      return (token, user);
+    } catch (e) {
+      throw AuthException(e.toString());
     }
-
-    // Return a fake token and user model
-    final token =
-        'mock_token_${email.hashCode}_${DateTime.now().millisecondsSinceEpoch}';
-    final user = UserModel(email: email);
-    return (token, user);
   }
 
-  /// Mock register. Basic checks.
   Future<(String, UserModel)> register({
     required String email,
     required String password,
     required String fullName,
     required String phoneNumber,
   }) async {
-    await Future.delayed(_delay);
-
-    if (!email.contains('@')) {
-      throw AuthException('Invalid email');
+    try {
+      await _dataSource.register(email, password, fullName, phoneNumber);
+      return await login(email: email, password: password); 
+    } catch (e) {
+      throw AuthException(e.toString());
     }
+  }
 
-    if (password.length < 6) {
-      throw AuthException('Password too short (min 6 chars)');
-    }
-
-    if (fullName.trim().isEmpty) {
-      throw AuthException('Full name cannot be empty');
-    }
-
-    if (phoneNumber.trim().isEmpty) {
-      throw AuthException('Phone number cannot be empty');
-    }
-
-    // Return a fake token and user model
-    final token =
-        'mock_token_${email.hashCode}_${DateTime.now().millisecondsSinceEpoch}';
-    final user = UserModel(
-      email: email,
-      fullName: fullName,
-      phoneNumber: phoneNumber,
+  // SỬA LẠI: Dùng email để lấy user mới nhất từ DB
+  Future<UserModel?> getUser(String email) async {
+    final userData = await _dataSource.getUserByEmail(email);
+    if (userData == null) return null;
+    return UserModel(
+      id: userData['id'].toString(),
+      email: userData['email'],
+      fullName: userData['full_name'],
+      phoneNumber: userData['phone_number'],
+      plan: userData['plan'],
     );
-    return (token, user);
+  }
+
+  Future<void> updateProfile(UserModel user) async {
+    // SỬA LẠI: Dùng email làm khóa cập nhật cho chính xác
+    await _dataSource.updateProfile(
+      user.email, 
+      user.fullName ?? '', 
+      user.phoneNumber ?? ''
+    );
+  }
+
+  Future<void> upgradePlan(String email, String newPlan) async {
+    // SỬA LẠI: Dùng email làm khóa nâng cấp
+    await _dataSource.updateUserPlan(email, newPlan);
   }
 }
 
 class AuthException implements Exception {
   final String message;
   AuthException(this.message);
-
   @override
-  String toString() => 'AuthException: $message';
+  String toString() => message;
 }

@@ -37,7 +37,6 @@ class AuthState {
 class AuthNotifier extends Notifier<AuthState> {
   @override
   AuthState build() {
-    // initial state; then load persisted token and user
     _load();
     return const AuthState();
   }
@@ -48,12 +47,11 @@ class AuthNotifier extends Notifier<AuthState> {
   Future<void> _load() async {
     final token = await _prefs.getAuthToken();
     final user = await _prefs.getUserData();
-    state = state.copyWith(token: token, user: user);
+    state = AuthState(token: token, user: user);
   }
 
   Future<void> login(String email, String password) async {
-    state = state.copyWith(isLoading: true, error: null);
-
+    state = const AuthState(isLoading: true);
     try {
       final (token, user) = await _service.login(
         email: email,
@@ -61,9 +59,11 @@ class AuthNotifier extends Notifier<AuthState> {
       );
       await _prefs.setAuthToken(token);
       await _prefs.setUserData(user);
-      state = state.copyWith(token: token, user: user, isLoading: false);
+      state = AuthState(token: token, user: user, isLoading: false);
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      await _prefs.setAuthToken(null);
+      await _prefs.setUserData(null);
+      state = AuthState(isLoading: false, error: e.toString());
     }
   }
 
@@ -73,8 +73,7 @@ class AuthNotifier extends Notifier<AuthState> {
     String fullName,
     String phoneNumber,
   ) async {
-    state = state.copyWith(isLoading: true, error: null);
-
+    state = const AuthState(isLoading: true);
     try {
       final (token, user) = await _service.register(
         email: email,
@@ -84,7 +83,36 @@ class AuthNotifier extends Notifier<AuthState> {
       );
       await _prefs.setAuthToken(token);
       await _prefs.setUserData(user);
-      state = state.copyWith(token: token, user: user, isLoading: false);
+      state = AuthState(token: token, user: user, isLoading: false);
+    } catch (e) {
+      state = AuthState(isLoading: false, error: e.toString());
+    }
+  }
+
+  /// ÉP TẢI LẠI THÔNG TIN TỪ DATABASE (Để cập nhật VIP ngay)
+  Future<void> reloadUserFromDb() async {
+    final currentUser = state.user;
+    if (currentUser == null) return;
+
+    try {
+      final updatedUser = await _service.getUser(currentUser.email);
+      if (updatedUser != null) {
+        // Cập nhật cả bộ nhớ máy và trạng thái đang hiển thị
+        await _prefs.setUserData(updatedUser);
+        state = state.copyWith(user: updatedUser, error: null);
+        print('--- ĐÃ ĐỒNG BỘ GÓI ${updatedUser.plan} TỪ DATABASE ---');
+      }
+    } catch (e) {
+      print('Lỗi reloadUserFromDb: $e');
+    }
+  }
+
+  Future<void> updateProfile(UserModel updatedUser) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      await _service.updateProfile(updatedUser);
+      await _prefs.setUserData(updatedUser);
+      state = state.copyWith(user: updatedUser, isLoading: false);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
     }
@@ -93,11 +121,6 @@ class AuthNotifier extends Notifier<AuthState> {
   Future<void> logout() async {
     await _prefs.setAuthToken(null);
     await _prefs.setUserData(null);
-    state = const AuthState(token: null, user: null);
-  }
-
-  Future<void> updateProfile(UserModel updatedUser) async {
-    await _prefs.setUserData(updatedUser);
-    state = state.copyWith(user: updatedUser);
+    state = const AuthState();
   }
 }
