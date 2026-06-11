@@ -1,8 +1,10 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:mixcine_movie_app/data/models/user_model.dart';
 import 'package:mixcine_movie_app/data/datasources/auth_remote_data_source.dart';
 
 class AuthService {
   final AuthRemoteDataSource _dataSource = AuthRemoteDataSource();
+  final _client = Supabase.instance.client;
 
   Future<(String, UserModel)> login({
     required String email,
@@ -10,12 +12,10 @@ class AuthService {
   }) async {
     try {
       final userData = await _dataSource.login(email, password);
-      
-      // Tạo token dựa trên email để đồng bộ
-      final token = 'token_${email.hashCode}';
+      final token = _client.auth.currentSession?.accessToken ?? '';
       
       final user = UserModel(
-        id: userData['id'].toString(),
+        id: userData['id'].toString(), // Đây là UUID
         email: userData['email'],
         fullName: userData['full_name'],
         phoneNumber: userData['phone_number'],
@@ -23,6 +23,22 @@ class AuthService {
       );
       
       return (token, user);
+    } catch (e) {
+      throw AuthException(e.toString());
+    }
+  }
+
+  Future<void> signInWithGoogle() async {
+    try {
+      await _dataSource.signInWithGoogle();
+    } catch (e) {
+      throw AuthException(e.toString());
+    }
+  }
+
+  Future<void> resetPassword(String email) async {
+    try {
+      await _dataSource.resetPassword(email);
     } catch (e) {
       throw AuthException(e.toString());
     }
@@ -42,12 +58,11 @@ class AuthService {
     }
   }
 
-  // SỬA LẠI: Dùng email để lấy user mới nhất từ DB
   Future<UserModel?> getUser(String email) async {
     final userData = await _dataSource.getUserByEmail(email);
     if (userData == null) return null;
     return UserModel(
-      id: userData['id'].toString(),
+      id: userData['id'].toString(), // Đảm bảo lấy ID (UUID)
       email: userData['email'],
       fullName: userData['full_name'],
       phoneNumber: userData['phone_number'],
@@ -56,17 +71,23 @@ class AuthService {
   }
 
   Future<void> updateProfile(UserModel user) async {
-    // SỬA LẠI: Dùng email làm khóa cập nhật cho chính xác
+    if (user.id == null) {
+      throw AuthException('Không tìm thấy ID người dùng để cập nhật');
+    }
+    // SỬA: Truyền user.id (UUID) và ép kiểu non-nullable
     await _dataSource.updateProfile(
-      user.email, 
+      user.id!,
       user.fullName ?? '', 
       user.phoneNumber ?? ''
     );
   }
 
   Future<void> upgradePlan(String email, String newPlan) async {
-    // SỬA LẠI: Dùng email làm khóa nâng cấp
     await _dataSource.updateUserPlan(email, newPlan);
+  }
+
+  Future<void> signOut() async {
+    await _dataSource.signOut();
   }
 }
 

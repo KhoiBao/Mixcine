@@ -1,8 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import '../../domain/entities/movie_comment.dart';
+import 'app_providers.dart';
+import 'auth_provider.dart';
 
-// Provider for storing user ratings for movies
+// 1. Quản lý điểm đánh giá (Dùng hiển thị trên UI)
 final movieRatingsProvider =
     NotifierProvider<MovieRatingsNotifier, Map<int, double>>(
       MovieRatingsNotifier.new,
@@ -10,103 +11,57 @@ final movieRatingsProvider =
 
 class MovieRatingsNotifier extends Notifier<Map<int, double>> {
   @override
-  Map<int, double> build() {
-    return {};
-  }
+  Map<int, double> build() => {};
 
   void setRating(int movieId, double rating) {
-    final newState = {...state};
-    newState[movieId] = rating.clamp(0, 10);
-    state = newState;
-  }
-
-  double? getRating(int movieId) {
-    return state[movieId];
+    state = {...state, movieId: rating.clamp(0, 10)};
   }
 }
 
-// Provider for storing comments for movies
+// 2. Quản lý bình luận (Kết nối trực tiếp Supabase)
+class MovieCommentsNotifier extends FamilyAsyncNotifier<List<MovieComment>, int> {
+  @override
+  Future<List<MovieComment>> build(int movieId) async {
+    // Tự động tải bình luận từ Supabase
+    return ref.read(reviewRepositoryProvider).getReviewsForMovie(movieId);
+  }
+
+  Future<void> addComment(String text, double rating) async {
+    final user = ref.read(authStateProvider).user;
+    
+    // KIỂM TRA QUAN TRỌNG: Dùng user.id (UUID) thay vì email để tránh lỗi 22P02
+    if (user == null || user.id == null) return;
+
+    try {
+      await ref.read(reviewRepositoryProvider).addReview(
+            arg, // movieId
+            user.id!, // UUID chuẩn
+            user.fullName ?? user.email,
+            text,
+            rating,
+          );
+      
+      // Làm mới danh sách sau khi thêm thành công
+      ref.invalidateSelf();
+    } catch (e) {
+      print('Lỗi thêm bình luận: $e');
+    }
+  }
+
+  Future<void> deleteComment(int reviewId) async {
+    final user = ref.read(authStateProvider).user;
+    if (user == null || user.id == null) return;
+
+    try {
+      await ref.read(reviewRepositoryProvider).deleteReview(reviewId, user.id!);
+      ref.invalidateSelf();
+    } catch (e) {
+      print('Lỗi xóa bình luận: $e');
+    }
+  }
+}
+
 final movieCommentsProvider =
-    NotifierProvider<MovieCommentsNotifier, Map<int, List<MovieComment>>>(
+    AsyncNotifierProvider.family<MovieCommentsNotifier, List<MovieComment>, int>(
       MovieCommentsNotifier.new,
     );
-
-class MovieCommentsNotifier extends Notifier<Map<int, List<MovieComment>>> {
-  @override
-  Map<int, List<MovieComment>> build() {
-    return {};
-  }
-
-  void addComment(
-    int movieId,
-    String userId,
-    String author,
-    String text,
-    double rating,
-  ) {
-    final comment = MovieComment(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      movieId: movieId,
-      userId: userId, // ✓ Add userId for security
-      author: author,
-      text: text,
-      rating: rating.clamp(0, 10),
-      createdAt: DateTime.now(),
-    );
-
-    final newState = {...state};
-    newState[movieId] = [comment, ...(state[movieId] ?? [])];
-    state = newState;
-  }
-
-  List<MovieComment> getComments(int movieId) {
-    return state[movieId] ?? [];
-  }
-
-  void deleteComment(int movieId, String commentId) {
-    final newState = {...state};
-    newState[movieId] = (state[movieId] ?? [])
-        .where((c) => c.id != commentId)
-        .toList();
-    state = newState;
-  }
-}
-
-// Provider for storing user ratings for comments
-// Key format: "commentId:userId" → Rating (1-5 stars)
-final commentRatingsProvider =
-    NotifierProvider<CommentRatingsNotifier, Map<String, double>>(
-      CommentRatingsNotifier.new,
-    );
-
-class CommentRatingsNotifier extends Notifier<Map<String, double>> {
-  @override
-  Map<String, double> build() {
-    return {};
-  }
-
-  // ✓ Set rating for a comment by a user (1-5 stars)
-  void rateComment(String commentId, String userId, double rating) {
-    final key = '$commentId:$userId';
-    final newState = {...state};
-    newState[key] = rating.clamp(1, 5);
-    state = newState;
-  }
-
-  // ✓ Get rating for a comment by a user
-  double? getCommentRating(String commentId, String userId) {
-    final key = '$commentId:$userId';
-    return state[key];
-  }
-
-  // ✓ Get average rating for a comment
-  double getAverageRating(String commentId) {
-    final ratings = state.entries
-        .where((e) => e.key.startsWith('$commentId:'))
-        .map((e) => e.value)
-        .toList();
-
-    if (ratings.isEmpty) return 0;
-    return ratings.reduce((a, b) => a + b) / ratings.length;
-  }
-}

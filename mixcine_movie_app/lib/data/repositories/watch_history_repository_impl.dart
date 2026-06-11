@@ -10,19 +10,17 @@ class WatchHistoryRepositoryImpl implements WatchHistoryRepository {
   final WatchHistoryLocalDataSource _localDataSource;
 
   @override
-  // Thêm userId
   Future<void> saveWatchProgress(String userId, int movieId, int progress) {
+    // userId ở đây phải là UUID (user.id)
     return _localDataSource.saveWatchProgress(userId, movieId, progress);
   }
 
   @override
-  // Thêm userId
   Future<int?> getWatchProgress(String userId, int movieId) {
     return _localDataSource.getWatchProgress(userId, movieId);
   }
 
   @override
-  // Thêm userId
   Future<List<WatchHistory>> getAllWatchHistory(String userId) async {
     final models = await _localDataSource.getAllWatchHistory(userId);
 
@@ -38,7 +36,6 @@ class WatchHistoryRepositoryImpl implements WatchHistoryRepository {
   }
 
   @override
-  // Thêm userId
   Future<void> removeWatchHistory(String userId, int movieId) {
     return _localDataSource.removeWatchHistory(userId, movieId);
   }

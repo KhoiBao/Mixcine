@@ -33,7 +33,6 @@ class UserModel {
     );
   }
 
-  // Đổi Key thành snake_case để khớp hoàn toàn với SQLite
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -48,9 +47,10 @@ class UserModel {
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
       id: json['id']?.toString(),
-      email: json['email'] as String,
+      email: json['email'] as String? ?? '',
       fullName: json['full_name'] as String?,
-      phoneNumber: json['phone_number'] as String?,
+      // SỬA: Ép kiểu an toàn, tránh lỗi nếu DB trả về int
+      phoneNumber: json['phone_number']?.toString(),
       avatar: json['avatar'] as String?,
       plan: json['plan'] as String?,
     );

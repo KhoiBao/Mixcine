@@ -1,68 +1,102 @@
-import '../../database/database_helper.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter/foundation.dart';
 
 class AuthRemoteDataSource {
-  final DatabaseHelper _dbHelper = DatabaseHelper();
+  final _client = Supabase.instance.client;
 
-  // 1. HÀM ĐĂNG KÝ
+  // 1. ĐĂNG KÝ
   Future<void> register(String email, String password, String fullName, String phoneNumber) async {
-    final db = await _dbHelper.database;
-    await db.insert('users', {
-      'email': email,
-      'password': password,
-      'full_name': fullName,
-      'phone_number': phoneNumber,
-      'plan': 'FREE', 
-    });
+    await _client.auth.signUp(
+      email: email,
+      password: password,
+      data: {
+        'full_name': fullName,
+        'phone_number': phoneNumber,
+      },
+    );
   }
 
-  // 2. HÀM ĐĂNG NHẬP
+  // 2. ĐĂNG NHẬP
   Future<Map<String, dynamic>> login(String email, String password) async {
-    final db = await _dbHelper.database;
-    final result = await db.query(
-      'users',
-      where: 'email = ? AND password = ?',
-      whereArgs: [email, password],
+    final response = await _client.auth.signInWithPassword(
+      email: email,
+      password: password,
     );
-    if (result.isEmpty) throw Exception('Sai email hoặc mật khẩu!');
-    return result.first;
+
+    if (response.user == null) throw Exception('Đăng nhập thất bại');
+
+    final profile = await _client
+        .from('profiles')
+        .select()
+        .eq('id', response.user!.id)
+        .maybeSingle();
+
+    // Nếu không thấy profile trong DB, dùng thông tin từ Auth làm dự phòng
+    return profile ?? _createFallbackProfile(response.user!);
   }
 
-  // 3. CẬP NHẬT GÓI CƯỚC (QUAN TRỌNG: Kiểm tra xem có tìm thấy user không)
-  Future<void> updateUserPlan(String email, String newPlan) async {
-    final db = await _dbHelper.database;
-    final count = await db.update(
-      'users',
-      {'plan': newPlan},
-      where: 'email = ?', 
-      whereArgs: [email.trim()], // Trim để tránh lỗi khoảng trắng
+  // 3. ĐĂNG NHẬP GOOGLE
+  Future<void> signInWithGoogle() async {
+    await _client.auth.signInWithOAuth(
+      OAuthProvider.google,
+      // redirectTo phải khớp với Deep Link trong AndroidManifest.xml
+      redirectTo: kIsWeb ? null : 'io.supabase.movieapp://callback',
     );
-    
-    if (count > 0) {
-      print('✅ [DATABASE] Đã nâng cấp thành công gói $newPlan cho: $email');
-    } else {
-      print('❌ [DATABASE] KHÔNG tìm thấy user có email: $email để nâng cấp!');
-    }
+  }
+
+  // Helper để tạo profile tạm nếu DB chưa kịp cập nhật
+  Map<String, dynamic> _createFallbackProfile(User user) {
+    return {
+      'id': user.id,
+      'email': user.email,
+      'full_name': user.userMetadata?['full_name'] ?? user.userMetadata?['name'] ?? 'Người dùng',
+      'phone_number': user.userMetadata?['phone_number'] ?? '',
+      'plan': 'FREE',
+    };
   }
 
   // 4. LẤY THÔNG TIN USER THEO EMAIL
   Future<Map<String, dynamic>?> getUserByEmail(String email) async {
-    final db = await _dbHelper.database;
-    final result = await db.query(
-      'users',
-      where: 'email = ?',
-      whereArgs: [email.trim()],
-    );
-    return result.isNotEmpty ? result.first : null;
+    final profile = await _client
+        .from('profiles')
+        .select()
+        .eq('email', email.trim())
+        .maybeSingle();
+    
+    if (profile == null) {
+      final currentUser = _client.auth.currentUser;
+      if (currentUser != null && currentUser.email == email) {
+        return _createFallbackProfile(currentUser);
+      }
+    }
+    return profile;
   }
 
-  // 5. CẬP NHẬT PROFILE
-  Future<void> updateProfile(String email, String fullName, String phoneNumber) async {
-    final db = await _dbHelper.database;
-    await db.update(
-      'users',
-      {'full_name': fullName, 'phone_number': phoneNumber},
-      where: 'email = ?',
-      whereArgs: [email],
+  Future<void> resetPassword(String email) async {
+    await _client.auth.resetPasswordForEmail(
+      email,
+      redirectTo: kIsWeb ? null : 'io.supabase.movieapp://callback',
     );
+  }
+
+  Future<void> updateUserPlan(String email, String newPlan) async {
+    await _client
+        .from('profiles')
+        .update({'plan': newPlan})
+        .eq('email', email.trim());
+  }
+
+  Future<void> updateProfile(String userId, String fullName, String phoneNumber) async {
+    await _client
+        .from('profiles')
+        .update({
+          'full_name': fullName,
+          'phone_number': phoneNumber,
+        })
+        .eq('id', userId);
+  }
+
+  Future<void> signOut() async {
+    await _client.auth.signOut();
   }
 }

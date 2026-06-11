@@ -333,12 +333,12 @@ class _CommentsSectionState extends ConsumerState<_CommentsSection> {
     }
     if (_commentController.text.trim().isEmpty) return;
 
-    ref.read(movieCommentsProvider.notifier).addComment(
-      widget.movieId,
-      authState.user!.email,
-      authState.user!.fullName ?? authState.user!.email,
+    // LẤY ĐIỂM RATING HIỆN TẠI
+    final currentRating = ref.read(movieRatingsProvider)[widget.movieId] ?? 0.0;
+
+    ref.read(movieCommentsProvider(widget.movieId).notifier).addComment(
       _commentController.text.trim(),
-      0,
+      currentRating,
     );
     _commentController.clear();
     FocusScope.of(context).unfocus();
@@ -346,7 +346,7 @@ class _CommentsSectionState extends ConsumerState<_CommentsSection> {
 
   @override
   Widget build(BuildContext context) {
-    final comments = ref.watch(movieCommentsProvider)[widget.movieId] ?? [];
+    final comments = ref.watch(movieCommentsProvider(widget.movieId)).value ?? [];
     final theme = Theme.of(context);
 
     return Column(
@@ -396,7 +396,7 @@ class _CommentTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final isOwner = comment.userId == ref.watch(authStateProvider).user?.email;
+    final isOwner = comment.userId == ref.watch(authStateProvider).user?.id;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -428,7 +428,7 @@ class _CommentTile extends ConsumerWidget {
               if (isOwner)
                 IconButton(
                   icon: const Icon(Icons.delete_outline_rounded, size: 20, color: Colors.redAccent),
-                  onPressed: () => ref.read(movieCommentsProvider.notifier).deleteComment(movieId, comment.id),
+                  onPressed: () => ref.read(movieCommentsProvider(movieId).notifier).deleteComment(int.parse(comment.id)),
                 ),
             ],
           ),

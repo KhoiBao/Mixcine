@@ -68,7 +68,7 @@ class MovieModel {
       json['title']?.toString() ?? json['name']?.toString() ?? 'Untitled',
       overview: overviewStr.trim().isNotEmpty
           ? overviewStr
-          : 'No description available for this movie yet.',
+          : 'Chưa có mô tả phim.',
       posterUrl: _buildImageUrl(json['poster_path']),
       backdropUrl: _buildBackdropUrl(
         json['backdrop_path'] ?? json['poster_path'],
@@ -96,7 +96,7 @@ class MovieModel {
         final desc = json['description']?.toString() ?? '';
         return desc.trim().isNotEmpty
             ? desc
-            : 'No description available for this movie yet.';
+            : 'Chưa có mô tả phim.';
       })(),
       posterUrl: (json['poster_url'] as String?)?.trim() ?? '',
       backdropUrl: (json['thumb_url'] as String?)?.trim() ?? '',

@@ -1,4 +1,3 @@
-// Xóa chữ YOUR_TMN_CODE đi và thay bằng key của bro, nhớ giữ lại dấu nháy
 const String vnpTmnCode = "DGIW13D1";
 
 // Tương tự với Hash Secret
