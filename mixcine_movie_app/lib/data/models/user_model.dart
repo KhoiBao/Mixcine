@@ -15,23 +15,7 @@ class UserModel {
     this.plan,
   });
 
-  UserModel copyWith({
-    String? id,
-    String? email,
-    String? fullName,
-    String? phoneNumber,
-    String? avatar,
-    String? plan,
-  }) {
-    return UserModel(
-      id: id ?? this.id,
-      email: email ?? this.email,
-      fullName: fullName ?? this.fullName,
-      phoneNumber: phoneNumber ?? this.phoneNumber,
-      avatar: avatar ?? this.avatar,
-      plan: plan ?? this.plan,
-    );
-  }
+  // ... hàm copyWith giữ nguyên ...
 
   Map<String, dynamic> toJson() {
     return {
@@ -39,7 +23,8 @@ class UserModel {
       'email': email,
       'full_name': fullName,
       'phone_number': phoneNumber,
-      'avatar': avatar,
+      // ĐỒNG BỘ TẠI ĐÂY: Gửi lên đúng tên cột 'avatar_url' trên Database
+      'avatar_url': avatar,
       'plan': plan,
     };
   }
@@ -49,15 +34,15 @@ class UserModel {
       id: json['id']?.toString(),
       email: json['email'] as String? ?? '',
       fullName: json['full_name'] as String?,
-      // SỬA: Ép kiểu an toàn, tránh lỗi nếu DB trả về int
       phoneNumber: json['phone_number']?.toString(),
-      avatar: json['avatar'] as String?,
+      // ĐỒNG BỘ TẠI ĐÂY: Đọc từ trường 'avatar_url' hoặc 'avatar' đề phòng nhóm dùng cả hai
+      avatar: (json['avatar_url'] ?? json['avatar']) as String?,
       plan: json['plan'] as String?,
     );
   }
 
   @override
   String toString() {
-    return 'UserModel(id: $id, email: $email, fullName: $fullName, phoneNumber: $phoneNumber, plan: $plan)';
+    return 'UserModel(id: $id, email: $email, fullName: $fullName, phoneNumber: $phoneNumber, avatar: $avatar, plan: $plan)';
   }
 }

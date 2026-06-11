@@ -1,6 +1,15 @@
 class User {
-  const User({required this.id, required this.name});
+  final String id;
+  final String email;
+  final String? fullName;
+  final String? phoneNumber; // 👈 THÊM DÒNG NÀY VÀO ENTITY ĐỂ HẾT LỖI
+  final String? avatar;
 
-  final String id; // Unique user ID (UUID or timestamp)
-  final String name; // Username/Display name
+  const User({
+    required this.id,
+    required this.email,
+    this.fullName,
+    this.phoneNumber, // 👈 THÊM VÀO CONSTRUCTOR
+    this.avatar,
+  });
 }

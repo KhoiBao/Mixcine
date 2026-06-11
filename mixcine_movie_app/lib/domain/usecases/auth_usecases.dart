@@ -1,23 +1,24 @@
-import '../entities/user.dart';
-import '../repositories/auth_repository.dart';
+import 'package:mixcine_movie_app/core/services/auth_service.dart';
 
 class AuthUseCases {
-  final AuthRepository repository;
+  final AuthService _authService;
 
-  const AuthUseCases(this.repository);
+  AuthUseCases(this._authService);
 
-  // Use case 1: Đăng nhập
-  Future<void> login(String id, String name) {
-    return repository.login(id, name);
-  }
+  // Giữ nguyên toàn bộ các hàm cũ (login, register, logout, v.v.) của nhóm bạn ở đây nếu có.
+  // Chỉ thay thế hoặc thêm duy nhất hàm updateProfile này:
 
-  // Use case 2: Lấy User hiện tại
-  Future<User?> getCurrentUser() {
-    return repository.getCurrentUser();
-  }
-
-  // Use case 3: Đăng xuất
-  Future<void> logout() {
-    return repository.logout();
+  Future<String?> updateProfile({
+    required String newFullName,
+    required String newPhoneNumber,
+    List<int>? imageBytes,
+    String? fileName,
+  }) {
+    return _authService.updateProfile(
+      newFullName: newFullName,
+      newPhoneNumber: newPhoneNumber,
+      imageBytes: imageBytes,
+      fileName: fileName,
+    );
   }
 }

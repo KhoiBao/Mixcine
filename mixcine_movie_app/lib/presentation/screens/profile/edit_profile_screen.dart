@@ -1,7 +1,8 @@
+import 'dart:typed_data'; // Cần thiết để xài Uint8List hiển thị ảnh từ bytes
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mixcine_movie_app/data/models/user_model.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../providers/auth_provider.dart';
 import '../../widgets/primary_button.dart';
@@ -18,6 +19,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   late TextEditingController _fullNameController;
   late TextEditingController _phoneController;
   late TextEditingController _emailController;
+
+  // Biến phục vụ tính năng chọn và lưu ảnh cục bộ trước khi push
+  XFile? _pickedFile;
+  List<int>? _imageBytes;
 
   @override
   void initState() {
@@ -40,28 +45,65 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     super.dispose();
   }
 
+  // Hàm kích hoạt bộ chọn ảnh hệ thống công khai
+  Future<void> _pickImage() async {
+    try {
+      final picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality:
+            70, // Nén nhẹ ảnh giúp upload lên Supabase Storage nhanh hơn
+      );
+
+      if (image != null) {
+        final bytes = await image.readAsBytes();
+        setState(() {
+          _pickedFile = image;
+          _imageBytes = bytes;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Không thể chọn ảnh: $e')));
+      }
+    }
+  }
+
   void _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    final updatedUser = UserModel(
-      email: _emailController.text.trim(),
-      fullName: _fullNameController.text.trim(),
-      phoneNumber: _phoneController.text.trim(),
-    );
 
-    await ref.read(authStateProvider.notifier).updateProfile(updatedUser);
+    try {
+      // Gọi notifier cập nhật profile với đầy đủ các tham số text và bytes ảnh mới
+      await ref
+          .read(authStateProvider.notifier)
+          .updateProfile(
+            newFullName: _fullNameController.text.trim(),
+            newPhoneNumber: _phoneController.text.trim(), // ĐẢM BẢO CÓ DÒNG NÀY
+            imageBytes: _imageBytes,
+            fileName: _pickedFile?.name,
+          );
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Cập nhật hồ sơ thành công')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cập nhật hồ sơ thành công')),
+      );
 
-    context.pop();
+      context.pop();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Cập nhật thất bại: $e')));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authStateProvider);
+    final user = authState.user;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Chỉnh sửa hồ sơ')),
@@ -72,57 +114,102 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             constraints: const BoxConstraints(maxWidth: 600),
             child: Form(
               key: _formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextFormField(
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(labelText: 'Email'),
-                    enabled: false,
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Email không được để trống';
-                      }
-                      if (!value.contains('@')) {
-                        return 'Email không hợp lệ';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _fullNameController,
-                    decoration: const InputDecoration(labelText: 'Họ và tên'),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Họ và tên không được để trống';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _phoneController,
-                    keyboardType: TextInputType.phone,
-                    decoration: const InputDecoration(
-                      labelText: 'Số điện thoại',
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // =======================================================================
+                    // KHU VỰC CHỌN ẢNH ĐẠI DIỆN (AVATAR) MỚI
+                    // =======================================================================
+                    GestureDetector(
+                      onTap: authState.isLoading ? null : _pickImage,
+                      child: Stack(
+                        children: [
+                          CircleAvatar(
+                            radius: 55,
+                            backgroundColor: Colors.grey[800],
+                            backgroundImage: _imageBytes != null
+                                ? MemoryImage(Uint8List.fromList(_imageBytes!))
+                                : (user?.avatar != null &&
+                                      user!.avatar!.isNotEmpty)
+                                ? NetworkImage(user.avatar!)
+                                : null,
+                            child:
+                                (_imageBytes == null &&
+                                    (user?.avatar == null ||
+                                        user!.avatar!.isEmpty))
+                                ? const Icon(
+                                    Icons.person,
+                                    size: 55,
+                                    color: Colors.grey,
+                                  )
+                                : null,
+                          ),
+                          if (!authState.isLoading)
+                            Positioned(
+                              bottom: 0,
+                              right: 2,
+                              child: CircleAvatar(
+                                radius: 16,
+                                backgroundColor: Theme.of(context).primaryColor,
+                                child: const Icon(
+                                  Icons.camera_alt,
+                                  size: 16,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Số điện thoại không được để trống';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 20),
-                  PrimaryButton(
-                    label: authState.isLoading
-                        ? 'Đang cập nhật...'
-                        : 'Lưu thay đổi',
-                    onPressed: authState.isLoading ? null : _submit,
-                  ),
-                ],
+                    const SizedBox(height: 24),
+                    TextFormField(
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: const InputDecoration(
+                        labelText: 'Email',
+                        border: OutlineInputBorder(),
+                      ),
+                      enabled: false,
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _fullNameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Họ và tên',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Họ và tên không được để trống';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _phoneController,
+                      keyboardType: TextInputType.phone,
+                      decoration: const InputDecoration(
+                        labelText: 'Số điện thoại',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Số điện thoại không được để trống';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 28),
+                    PrimaryButton(
+                      label: authState.isLoading
+                          ? 'Đang cập nhật...'
+                          : 'Lưu thay đổi',
+                      onPressed: authState.isLoading ? null : _submit,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
