@@ -1,19 +1,31 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../presentation/screens/auth/login_screen.dart';
+import '../../presentation/screens/auth/register_screen.dart';
 import '../../presentation/screens/dashboard/dashboard_screen.dart';
 import '../../presentation/screens/movie_detail/movie_detail_screen.dart';
 import '../../presentation/screens/onboarding/onboarding_screen.dart';
 import '../../presentation/screens/player/video_player_screen.dart';
+import '../../presentation/screens/profile/edit_profile_screen.dart';
 import '../../presentation/screens/splash/splash_screen.dart';
+
+// --- THÊM IMPORT CHO 3 MÀN HÌNH THANH TOÁN ---
+import '../../presentation/screens/payment/subscription_screen.dart';
+import '../../presentation/screens/payment/payment_screen.dart';
+import '../../presentation/screens/payment/payment_success_screen.dart';
+import '../../domain/entities/payment_plan.dart';
+
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/',
     routes: <RouteBase>[
+      GoRoute(path: '/', builder: (context, state) => const SplashScreen()),
+      GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
-        path: '/',
-        builder: (context, state) => const SplashScreen(),
+        path: '/register',
+        builder: (context, state) => const RegisterScreen(),
       ),
       GoRoute(
         path: '/onboarding',
@@ -22,6 +34,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/dashboard',
         builder: (context, state) => const DashboardScreen(),
+      ),
+      GoRoute(
+        path: '/edit-profile',
+        builder: (context, state) => const EditProfileScreen(),
       ),
       GoRoute(
         path: '/movie/:id',
@@ -35,6 +51,29 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final movieId = int.tryParse(state.pathParameters['id'] ?? '0') ?? 0;
           return VideoPlayerScreen(movieId: movieId);
+        },
+      ),
+
+      // --- PHẦN ROUTE MỚI CHO VNPAY TÍCH HỢP Ở ĐÂY ---
+      GoRoute(
+        path: '/subscription',
+        builder: (context, state) => const SubscriptionScreen(),
+      ),
+      GoRoute(
+        path: '/payment',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>;
+          return PaymentScreen(
+            paymentUrl: extra['url'] as String,
+            plan: extra['plan'] as PaymentPlan,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/payment-success',
+        builder: (context, state) {
+          final plan = state.extra as PaymentPlan;
+          return PaymentSuccessScreen(plan: plan);
         },
       ),
     ],

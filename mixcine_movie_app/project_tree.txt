@@ -39,3 +39,4 @@ lib/presentation/widgets/movie_poster_card.dart
 lib/presentation/widgets/primary_button.dart
 project_tree.txt
 pubspec.yaml
+mixcine_movie_app\lib\core\config\key.dart

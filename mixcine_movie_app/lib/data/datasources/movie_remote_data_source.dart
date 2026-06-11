@@ -44,23 +44,26 @@ class MovieRemoteDataSource {
     }
   }
 
-  Future<List<MovieModel>> _fetchMovieList(String path, {required int page}) async {
+  Future<List<MovieModel>> _fetchMovieList(
+      String path, {
+        required int page,
+      }) async {
     try {
       final response = await _dio.get(
         path,
-        queryParameters: <String, dynamic>{
-          'page': page,
-        },
+        queryParameters: <String, dynamic>{'page': page},
       );
 
       final data = response.data as Map<String, dynamic>;
-      
+
       // Check if response has the Vietnamese API structure
       if (data.containsKey('items') && data['items'] is List) {
-        final items = List<Map<String, dynamic>>.from(data['items'] as List<dynamic>);
+        final items = List<Map<String, dynamic>>.from(
+          data['items'] as List<dynamic>,
+        );
         return items.map(MovieModel.fromVietnameseApi).toList();
       }
-      
+
       // Fallback for other response formats
       return const <MovieModel>[];
     } catch (e) {
@@ -81,6 +84,7 @@ class MovieRemoteDataSource {
       genres: const ['Film'],
       durationMinutes: 120,
       videoUrl: AppConfig.demoVideoUrl,
+      requiredTier: 1, // Đã fix: Thêm dòng này để thỏa mãn hàm khởi tạo
     );
   }
 }

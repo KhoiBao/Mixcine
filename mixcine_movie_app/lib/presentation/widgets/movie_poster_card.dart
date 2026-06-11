@@ -20,6 +20,8 @@ class MoviePosterCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final subtitle = movie.genres.isEmpty ? movie.year : '${movie.year} • ${movie.genres.first}';
 
     return Material(
@@ -39,12 +41,13 @@ class MoviePosterCard extends StatelessWidget {
                       child: CachedNetworkImage(
                         imageUrl: movie.posterUrl,
                         fit: BoxFit.cover,
+                        // 💡 Thay đổi màu loading để hài hòa với theme
                         placeholder: (context, url) => Container(
-                          color: AppColors.surfaceSoft,
-                          child: const Center(child: CircularProgressIndicator()),
+                          color: isDark ? AppColors.surfaceSoft : Colors.black.withOpacity(0.05),
+                          child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
                         ),
                         errorWidget: (context, url, error) => Container(
-                          color: AppColors.surfaceSoft,
+                          color: isDark ? AppColors.surfaceSoft : Colors.black.withOpacity(0.05),
                           child: const Icon(Icons.movie_creation_outlined, size: 40),
                         ),
                       ),
@@ -58,38 +61,14 @@ class MoviePosterCard extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: Colors.black54,
-                          borderRadius: BorderRadius.circular(14),
+                          color: Colors.black45,
+                          borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(
                           isFavorite ? Icons.favorite : Icons.favorite_border,
-                          color: isFavorite ? AppColors.danger : Colors.white,
+                          color: isFavorite ? AppColors.primary : Colors.white,
                           size: 18,
                         ),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    left: 10,
-                    bottom: 10,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.black54,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        children: <Widget>[
-                          const Icon(Icons.star_rounded, size: 16, color: AppColors.primary),
-                          const SizedBox(width: 4),
-                          Text(
-                            movie.ratingLabel,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
                       ),
                     ),
                   ),
@@ -101,14 +80,14 @@ class MoviePosterCard extends StatelessWidget {
               movie.title,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.titleMedium,
+              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 4),
             Text(
               subtitle,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.bodyMedium,
+              style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
             ),
           ],
         ),

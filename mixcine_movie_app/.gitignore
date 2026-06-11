@@ -15,4 +15,4 @@ ios/Pods/
 macos/Pods/
 
 # Local API config
-lib/core/config/api_config.dart
+# lib/core/config/api_config.dart

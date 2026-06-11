@@ -37,9 +37,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   void dispose() {
-    _scrollController
-      ..removeListener(_onScroll)
-      ..dispose();
+    _scrollController..removeListener(_onScroll)..dispose();
     super.dispose();
   }
 
@@ -47,200 +45,185 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final homeState = ref.watch(homeProvider);
     final favoriteIds = ref.watch(favoriteIdsProvider).value ?? <int>{};
+    final theme = Theme.of(context);
 
-    return SafeArea(
-      child: AsyncValueBuilder<HomeState>(
-        value: homeState,
-        onRetry: () => ref.invalidate(homeProvider),
-        onData: (data) {
-          return LayoutBuilder(
-            builder: (context, constraints) {
-              final crossAxisCount = constraints.maxWidth >= 900
-                  ? 4
-                  : constraints.maxWidth >= 600
-                      ? 3
-                      : 2;
-
-              return RefreshIndicator(
-                onRefresh: () async {
-                  ref.invalidate(homeProvider);
-                  await ref.read(homeProvider.future);
-                },
-                child: CustomScrollView(
-                  controller: _scrollController,
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  slivers: <Widget>[
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            _Header(
-                              onSearchTap: () => ref.read(dashboardIndexProvider.notifier).setIndex(1),
+    return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
+      body: SafeArea(
+        child: AsyncValueBuilder<HomeState>(
+          value: homeState,
+          onRetry: () => ref.invalidate(homeProvider),
+          onData: (data) {
+            return RefreshIndicator(
+              onRefresh: () async {
+                ref.invalidate(homeProvider);
+                await ref.read(homeProvider.future);
+              },
+              child: CustomScrollView(
+                controller: _scrollController,
+                physics: const AlwaysScrollableScrollPhysics(),
+                slivers: <Widget>[
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          _Header(
+                            onSearchTap: () => ref.read(dashboardIndexProvider.notifier).setIndex(1),
+                            onProfileTap: () => ref.read(dashboardIndexProvider.notifier).setIndex(3),
+                          ),
+                          const SizedBox(height: 24),
+                          if (data.heroMovie != null)
+                            _HeroBanner(
+                              movie: data.heroMovie!,
+                              onOpenDetails: () => context.push('/movie/${data.heroMovie!.id}'),
+                              onPlay: () => context.push('/player/${data.heroMovie!.id}'),
                             ),
-                            const SizedBox(height: 24),
-                            if (data.heroMovie != null)
-                              _HeroBanner(
-                                movie: data.heroMovie!,
-                                onOpenDetails: () => context.push('/movie/${data.heroMovie!.id}'),
-                                onPlay: () => context.push('/player/${data.heroMovie!.id}'),
-                              ),
-                            const SizedBox(height: 28),
-                            for (final section in data.sections) ...<Widget>[
-                              _SectionHeader(section: section),
-                              const SizedBox(height: 14),
-                              SizedBox(
-                                height: 280,
-                                child: ListView.separated(
-                                  scrollDirection: Axis.horizontal,
-                                  itemCount: section.movies.length,
-                                  separatorBuilder: (_, _) => const SizedBox(width: 14),
-                                  itemBuilder: (context, index) {
-                                    final movie = section.movies[index];
-                                    return SizedBox(
-                                      width: 158,
-                                      child: MoviePosterCard(
-                                        movie: movie,
-                                        isFavorite: favoriteIds.contains(movie.id),
-                                        onTap: () => context.push('/movie/${movie.id}'),
-                                        onFavoriteTap: () => ref.read(favoriteIdsProvider.notifier).toggle(movie.id),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                              const SizedBox(height: 24),
-                            ],
-                            Text(
-                              'Browse all',
-                              style: Theme.of(context).textTheme.titleLarge,
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              'Nà ná na nà na',
-                              style: Theme.of(context).textTheme.bodyMedium,
-                            ),
+                          const SizedBox(height: 32),
+                          for (final section in data.sections) ...<Widget>[
+                            _SectionHeader(section: section),
                             const SizedBox(height: 16),
-                          ],
-                        ),
-                      ),
-                    ),
-                    SliverPadding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      sliver: SliverGrid(
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                            final movie = data.discoverMovies[index];
-                            return MoviePosterCard(
-                              movie: movie,
-                              isFavorite: favoriteIds.contains(movie.id),
-                              onTap: () => context.push('/movie/${movie.id}'),
-                              onFavoriteTap: () => ref.read(favoriteIdsProvider.notifier).toggle(movie.id),
-                            );
-                          },
-                          childCount: data.discoverMovies.length,
-                        ),
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: crossAxisCount,
-                          crossAxisSpacing: 14,
-                          mainAxisSpacing: 18,
-                          childAspectRatio: 0.58,
-                        ),
-                      ),
-                    ),
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Center(
-                          child: data.isLoadingMore
-                              ? const CircularProgressIndicator()
-                              : data.hasMore
-                                  ? const SizedBox.shrink()
-                                  : Text(
-                                      'Hết phim (^)>',
-                                      style: Theme.of(context).textTheme.bodyMedium,
+                            SizedBox(
+                              height: 280,
+                              child: ListView.separated(
+                                scrollDirection: Axis.horizontal,
+                                itemCount: section.movies.length,
+                                separatorBuilder: (context, _) => const SizedBox(width: 14),
+                                itemBuilder: (context, index) {
+                                  final movie = section.movies[index];
+                                  return SizedBox(
+                                    width: 158,
+                                    child: MoviePosterCard(
+                                      movie: movie,
+                                      isFavorite: favoriteIds.contains(movie.id),
+                                      onTap: () => context.push('/movie/${movie.id}'),
+                                      onFavoriteTap: () => ref.read(favoriteIdsProvider.notifier).toggle(movie.id),
                                     ),
-                        ),
+                                  );
+                                },
+                              ),
+                            ),
+                            const SizedBox(height: 32),
+                          ],
+                          Text('Khám phá', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 16),
+                        ],
                       ),
                     ),
-                  ],
-                ),
-              );
-            },
-          );
-        },
+                  ),
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    sliver: SliverGrid(
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        final movie = data.discoverMovies[index];
+                        return MoviePosterCard(
+                          movie: movie,
+                          isFavorite: favoriteIds.contains(movie.id),
+                          onTap: () => context.push('/movie/${movie.id}'),
+                          onFavoriteTap: () => ref.read(favoriteIdsProvider.notifier).toggle(movie.id),
+                        );
+                      }, childCount: data.discoverMovies.length),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 14,
+                        mainAxisSpacing: 18,
+                        childAspectRatio: 0.58,
+                      ),
+                    ),
+                  ),
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Center(
+                        child: data.isLoadingMore
+                            ? const CircularProgressIndicator()
+                            : data.hasMore
+                                ? const SizedBox.shrink()
+                                : Text('Hết phim rùi ^_^', style: theme.textTheme.bodyMedium),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }
 }
 
 class _Header extends StatelessWidget {
-  const _Header({required this.onSearchTap});
-
+  const _Header({required this.onSearchTap, required this.onProfileTap});
   final VoidCallback onSearchTap;
+  final VoidCallback onProfileTap;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
+      children: [
         Row(
-          children: <Widget>[
+          children: [
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(
-                    AppBranding.appName.toUpperCase(),
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    AppBranding.homeGreeting,
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    AppBranding.homeSubtitle,
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
+                children: [
+                  Text(AppBranding.appName.toUpperCase(),
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 2,
+                      )),
+                  const SizedBox(height: 4),
+                  Text(AppBranding.homeGreeting, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
                 ],
               ),
             ),
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(14),
+            // 💡 SỬA LỖI: Biểu tượng Profile không còn bị "đen" ở Light Mode
+            InkWell(
+              onTap: onProfileTap,
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: theme.cardTheme.color,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: theme.colorScheme.outline.withOpacity(0.5)),
+                  boxShadow: [
+                    if (!isDark) BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
+                  ],
+                ),
+                child: Icon(Icons.person_outline_rounded, color: theme.colorScheme.primary),
               ),
-              child: const Icon(Icons.person_outline),
             ),
           ],
         ),
         const SizedBox(height: 20),
+        // 💡 SỬA LỖI: Thanh Search đồng bộ với Theme
         InkWell(
           onTap: onSearchTap,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(20),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
             decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(18),
+              color: theme.cardTheme.color,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: theme.colorScheme.outline.withOpacity(0.5)),
+              boxShadow: [
+                if (!isDark) BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 15, offset: const Offset(0, 6)),
+              ],
             ),
             child: Row(
-              children: <Widget>[
-                const Icon(Icons.search, color: AppColors.textSecondary),
-                const SizedBox(width: 12),
-                Text(
-                  'Search movies, genres, or your mood',
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
+              children: [
+                Icon(Icons.search_rounded, color: theme.colorScheme.primary, size: 22),
+                const SizedBox(width: 14),
+                Text('Tìm phim, thể loại...', style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
               ],
             ),
           ),
@@ -251,77 +234,61 @@ class _Header extends StatelessWidget {
 }
 
 class _HeroBanner extends StatelessWidget {
-  const _HeroBanner({
-    required this.movie,
-    required this.onOpenDetails,
-    required this.onPlay,
-  });
-
+  const _HeroBanner({required this.movie, required this.onOpenDetails, required this.onPlay});
   final Movie movie;
   final VoidCallback onOpenDetails;
   final VoidCallback onPlay;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Container(
-      height: 240,
+      height: 260,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(28),
-        image: DecorationImage(
-          image: NetworkImage(movie.backdropUrl),
-          fit: BoxFit.cover,
-        ),
+        borderRadius: BorderRadius.circular(32),
+        image: DecorationImage(image: NetworkImage(movie.backdropUrl), fit: BoxFit.cover),
       ),
       child: Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(28),
-          gradient: const LinearGradient(
+          borderRadius: BorderRadius.circular(32),
+          gradient: LinearGradient(
             begin: Alignment.bottomCenter,
             end: Alignment.topCenter,
-            colors: <Color>[Colors.black87, Colors.transparent],
+            colors: [Colors.black.withOpacity(0.9), Colors.transparent],
           ),
         ),
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.end,
-          children: <Widget>[
+          children: [
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.black54,
-                borderRadius: BorderRadius.circular(30),
-              ),
-              child: Text(
-                'Featured tonight',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white),
-              ),
+              decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.9), borderRadius: BorderRadius.circular(10)),
+              child: const Text('PHIM NỔI BẬT', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
             ),
             const SizedBox(height: 12),
-            Text(
-              movie.title,
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '${movie.year} • ${movie.durationLabel} • ${movie.ratingLabel}',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white70),
-            ),
-            const SizedBox(height: 18),
+            // 💡 SỬA LỖI: Luôn dùng chữ TRẮNG cho Dune Legacy vì nền ảnh tối
+            Text(movie.title, style: theme.textTheme.headlineMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 6),
+            Text('${movie.year} • ${movie.durationLabel} • ${movie.ratingLabel}',
+                style: const TextStyle(color: Colors.white70, fontSize: 13)),
+            const SizedBox(height: 20),
             Row(
-              children: <Widget>[
-                Expanded(
-                  child: PrimaryButton(
-                    label: 'Play',
-                    icon: Icons.play_arrow_rounded,
-                    onPressed: onPlay,
-                  ),
-                ),
+              children: [
+                Expanded(child: PrimaryButton(label: 'Xem ngay', icon: Icons.play_arrow_rounded, onPressed: onPlay)),
                 const SizedBox(width: 12),
                 Expanded(
                   child: OutlinedButton(
                     onPressed: onOpenDetails,
-                    child: const Text('Details'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      side: const BorderSide(color: Colors.white30),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                    child: const Text('Chi tiết'),
                   ),
                 ),
               ],
@@ -335,17 +302,17 @@ class _HeroBanner extends StatelessWidget {
 
 class _SectionHeader extends StatelessWidget {
   const _SectionHeader({required this.section});
-
   final MovieSection section;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Text(section.title, style: Theme.of(context).textTheme.titleLarge),
+      children: [
+        Text(section.title, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
         const SizedBox(height: 4),
-        Text(section.subtitle, style: Theme.of(context).textTheme.bodyMedium),
+        Text(section.subtitle, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
       ],
     );
   }

@@ -1,31 +1,38 @@
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class FavoritesLocalDataSource {
-  FavoritesLocalDataSource() : _prefs = SharedPreferencesAsync();
+  final _client = Supabase.instance.client;
 
-  final SharedPreferencesAsync _prefs;
+  Future<Set<int>> getFavoriteIds(String userId) async {
+    final response = await _client
+        .from('favorites')
+        .select('movie_id')
+        .eq('user_id', userId);
 
-  static const String _favoriteIdsKey = 'favorite_movie_ids';
-
-  Future<Set<int>> getFavoriteIds() async {
-    final values = await _prefs.getStringList(_favoriteIdsKey) ?? <String>[];
-    return values.map(int.parse).toSet();
+    return (response as List).map((item) => item['movie_id'] as int).toSet();
   }
 
-  Future<Set<int>> toggleFavorite(int movieId) async {
-    final current = await getFavoriteIds();
+  Future<Set<int>> toggleFavorite(String userId, int movieId) async {
+    final existing = await _client
+        .from('favorites')
+        .select()
+        .eq('user_id', userId)
+        .eq('movie_id', movieId)
+        .maybeSingle();
 
-    if (current.contains(movieId)) {
-      current.remove(movieId);
+    if (existing != null) {
+      await _client
+          .from('favorites')
+          .delete()
+          .eq('user_id', userId)
+          .eq('movie_id', movieId);
     } else {
-      current.add(movieId);
+      await _client.from('favorites').insert({
+        'user_id': userId,
+        'movie_id': movieId,
+      });
     }
 
-    await _prefs.setStringList(
-      _favoriteIdsKey,
-      current.map((item) => item.toString()).toList(),
-    );
-
-    return current;
+    return await getFavoriteIds(userId);
   }
 }
