@@ -1,10 +1,10 @@
 class UserModel {
-  final String? id;
+  final String? id; // Đây là UUID từ Supabase
   final String email;
   final String? fullName;
   final String? phoneNumber;
   final String? avatar;
-  final String? plan;
+  final String? plan; // Lưu gói cước: FREE, VIP, VIP_PRO
 
   const UserModel({
     this.id,
@@ -33,26 +33,27 @@ class UserModel {
     );
   }
 
+  // Chuyển sang Map để đẩy lên Supabase (phải khớp tên cột trong DB)
   Map<String, dynamic> toJson() {
     return {
       'id': id,
       'email': email,
-      'full_name': fullName,
-      'phone_number': phoneNumber,
+      'full_name': fullName, // Khớp cột full_name
+      'phone_number': phoneNumber, // Khớp cột phone_number
       'avatar': avatar,
-      'plan': plan,
+      'plan': plan, // Khớp cột plan
     };
   }
 
+  // Khởi tạo từ JSON trả về của Supabase
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
       id: json['id']?.toString(),
       email: json['email'] as String? ?? '',
       fullName: json['full_name'] as String?,
-      // SỬA: Ép kiểu an toàn, tránh lỗi nếu DB trả về int
       phoneNumber: json['phone_number']?.toString(),
       avatar: json['avatar'] as String?,
-      plan: json['plan'] as String?,
+      plan: json['plan'] as String? ?? 'FREE', // Mặc định là FREE nếu null
     );
   }
 

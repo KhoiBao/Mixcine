@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:mixcine_movie_app/data/models/user_model.dart';
+import 'package:mixcine_movie_app/presentation/providers/subscription_provider.dart';
 import '../../core/services/auth_service.dart';
 import '../../core/services/app_preferences.dart';
 import 'app_providers.dart';
@@ -51,7 +52,6 @@ class AuthNotifier extends Notifier<AuthState> {
       final event = data.event;
 
       if (event == AuthChangeEvent.signedIn && session != null) {
-        // Ưu tiên lấy user từ Auth metadata ngay lập tức để không bị null
         final fallbackUser = UserModel(
           id: session.user.id,
           email: session.user.email ?? '',
@@ -63,12 +63,13 @@ class AuthNotifier extends Notifier<AuthState> {
         await _prefs.setAuthToken(session.accessToken);
         await _prefs.setUserData(fallbackUser);
 
-        // Sau đó mới thử cập nhật từ Profile DB (nếu có)
         try {
           final dbUser = await _service.getUser(session.user.email!);
           if (dbUser != null) {
             state = state.copyWith(user: dbUser);
             await _prefs.setUserData(dbUser);
+            // ĐỒNG BỘ GÓI CƯỚC TỪ DB VỀ LOCAL
+            ref.read(subscriptionProvider.notifier).syncWithUserPlan(dbUser.plan);
           }
         } catch (_) {}
       } else if (event == AuthChangeEvent.signedOut) {
@@ -80,12 +81,6 @@ class AuthNotifier extends Notifier<AuthState> {
   Future<void> _load() async {
     final token = await _prefs.getAuthToken();
     final user = await _prefs.getUserData();
-    if (user != null && user.id != null) {
-      if (user.id!.length < 30 || user.id!.contains('@')) {
-        await logout();
-        return;
-      }
-    }
     state = AuthState(token: token, user: user);
   }
 
@@ -96,6 +91,8 @@ class AuthNotifier extends Notifier<AuthState> {
       await _prefs.setAuthToken(token);
       await _prefs.setUserData(user);
       state = AuthState(token: token, user: user, isLoading: false);
+      // Đồng bộ gói cước
+      ref.read(subscriptionProvider.notifier).syncWithUserPlan(user.plan);
     } catch (e) {
       state = AuthState(isLoading: false, error: e.toString());
     }
@@ -128,6 +125,8 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   Future<void> logout() async {
+    // Gọi clear subscription trước khi logout để xóa data local
+    ref.read(subscriptionProvider.notifier).clear();
     await _service.signOut();
     await _prefs.setAuthToken(null);
     await _prefs.setUserData(null);
@@ -145,6 +144,7 @@ class AuthNotifier extends Notifier<AuthState> {
     if (updatedUser != null) {
       await _prefs.setUserData(updatedUser);
       state = state.copyWith(user: updatedUser);
+      ref.read(subscriptionProvider.notifier).syncWithUserPlan(updatedUser.plan);
     }
   }
 

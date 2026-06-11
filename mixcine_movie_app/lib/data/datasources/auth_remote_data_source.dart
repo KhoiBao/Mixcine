@@ -31,7 +31,6 @@ class AuthRemoteDataSource {
         .eq('id', response.user!.id)
         .maybeSingle();
 
-    // Nếu không thấy profile trong DB, dùng thông tin từ Auth làm dự phòng
     return profile ?? _createFallbackProfile(response.user!);
   }
 
@@ -39,12 +38,10 @@ class AuthRemoteDataSource {
   Future<void> signInWithGoogle() async {
     await _client.auth.signInWithOAuth(
       OAuthProvider.google,
-      // redirectTo phải khớp với Deep Link trong AndroidManifest.xml
       redirectTo: kIsWeb ? null : 'io.supabase.movieapp://callback',
     );
   }
 
-  // Helper để tạo profile tạm nếu DB chưa kịp cập nhật
   Map<String, dynamic> _createFallbackProfile(User user) {
     return {
       'id': user.id,
@@ -55,14 +52,13 @@ class AuthRemoteDataSource {
     };
   }
 
-  // 4. LẤY THÔNG TIN USER THEO EMAIL
   Future<Map<String, dynamic>?> getUserByEmail(String email) async {
     final profile = await _client
         .from('profiles')
         .select()
         .eq('email', email.trim())
         .maybeSingle();
-    
+
     if (profile == null) {
       final currentUser = _client.auth.currentUser;
       if (currentUser != null && currentUser.email == email) {
@@ -79,20 +75,24 @@ class AuthRemoteDataSource {
     );
   }
 
-  Future<void> updateUserPlan(String email, String newPlan) async {
-    await _client
+  // 🚀 ĐÃ SỬA CHUẨN XÁC: Gọi update xong mới gọi .select() để bắt lỗi RLS
+  Future<void> updateUserPlan(String userId, String newPlan) async {
+    final response = await _client
         .from('profiles')
         .update({'plan': newPlan})
-        .eq('email', email.trim());
+        .eq('id', userId)
+        .select();
+
+    print('KẾT QUẢ UPDATE VIP TỪ SUPABASE: $response');
   }
 
   Future<void> updateProfile(String userId, String fullName, String phoneNumber) async {
     await _client
         .from('profiles')
         .update({
-          'full_name': fullName,
-          'phone_number': phoneNumber,
-        })
+      'full_name': fullName,
+      'phone_number': phoneNumber,
+    })
         .eq('id', userId);
   }
 
