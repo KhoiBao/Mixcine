@@ -44,15 +44,21 @@ class MovieDetailScreen extends ConsumerWidget {
                 expandedHeight: 320,
                 backgroundColor: theme.scaffoldBackgroundColor,
                 surfaceTintColor: Colors.transparent,
-                leading: BackButton(color: isDark ? Colors.white : Colors.black),
+                leading: BackButton(
+                  color: isDark ? Colors.white : Colors.black,
+                ),
                 actions: <Widget>[
                   Padding(
                     padding: const EdgeInsets.only(right: 12),
                     child: IconButton(
-                      onPressed: () => ref.read(favoriteIdsProvider.notifier).toggle(movie.id),
+                      onPressed: () => ref
+                          .read(favoriteIdsProvider.notifier)
+                          .toggle(movie.id),
                       icon: Icon(
                         isFavorite ? Icons.favorite : Icons.favorite_border,
-                        color: isFavorite ? AppColors.primary : (isDark ? Colors.white : Colors.black),
+                        color: isFavorite
+                            ? AppColors.primary
+                            : (isDark ? Colors.white : Colors.black),
                       ),
                     ),
                   ),
@@ -72,7 +78,7 @@ class MovieDetailScreen extends ConsumerWidget {
                             end: Alignment.topCenter,
                             colors: <Color>[
                               theme.scaffoldBackgroundColor.withOpacity(0.9),
-                              Colors.transparent
+                              Colors.transparent,
                             ],
                           ),
                         ),
@@ -106,16 +112,27 @@ class MovieDetailScreen extends ConsumerWidget {
                               children: <Widget>[
                                 Text(
                                   movie.title,
-                                  style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                                  style: theme.textTheme.headlineSmall
+                                      ?.copyWith(fontWeight: FontWeight.bold),
                                 ),
                                 const SizedBox(height: 12),
                                 Wrap(
                                   spacing: 8,
                                   runSpacing: 8,
                                   children: <Widget>[
-                                    _InfoChip(icon: Icons.calendar_today_rounded, label: movie.year),
-                                    _InfoChip(icon: Icons.access_time_rounded, label: movie.durationLabel),
-                                    _InfoChip(icon: Icons.star_rounded, label: movie.ratingLabel, isAccent: true),
+                                    _InfoChip(
+                                      icon: Icons.calendar_today_rounded,
+                                      label: movie.year,
+                                    ),
+                                    _InfoChip(
+                                      icon: Icons.access_time_rounded,
+                                      label: movie.durationLabel,
+                                    ),
+                                    _InfoChip(
+                                      icon: Icons.star_rounded,
+                                      label: movie.ratingLabel,
+                                      isAccent: true,
+                                    ),
                                   ],
                                 ),
                                 const SizedBox(height: 16),
@@ -123,18 +140,33 @@ class MovieDetailScreen extends ConsumerWidget {
                                   spacing: 8,
                                   runSpacing: 8,
                                   children: movie.genres
-                                      .map((genre) => Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                            decoration: BoxDecoration(
-                                              color: colorScheme.primary.withOpacity(0.08),
-                                              borderRadius: BorderRadius.circular(100),
-                                              border: Border.all(color: colorScheme.primary.withOpacity(0.1)),
+                                      .map(
+                                        (genre) => Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 6,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: colorScheme.primary
+                                                .withOpacity(0.08),
+                                            borderRadius: BorderRadius.circular(
+                                              100,
                                             ),
-                                            child: Text(
-                                              genre,
-                                              style: TextStyle(color: colorScheme.primary, fontSize: 11, fontWeight: FontWeight.w600),
+                                            border: Border.all(
+                                              color: colorScheme.primary
+                                                  .withOpacity(0.1),
                                             ),
-                                          ))
+                                          ),
+                                          child: Text(
+                                            genre,
+                                            style: TextStyle(
+                                              color: colorScheme.primary,
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
+                                      )
                                       .toList(),
                                 ),
                               ],
@@ -151,7 +183,10 @@ class MovieDetailScreen extends ConsumerWidget {
                               icon: Icons.play_arrow_rounded,
                               onPressed: () {
                                 if (userTier < movie.requiredTier) {
-                                  _showPremiumDialog(context, movie.requiredTier);
+                                  _showPremiumDialog(
+                                    context,
+                                    movie.requiredTier,
+                                  );
                                 } else {
                                   context.push('/player/${movie.id}');
                                 }
@@ -162,30 +197,52 @@ class MovieDetailScreen extends ConsumerWidget {
                           Expanded(
                             child: OutlinedButton.icon(
                               style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 14),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                side: BorderSide(color: isFavorite ? AppColors.primary : colorScheme.outline),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                side: BorderSide(
+                                  color: isFavorite
+                                      ? AppColors.primary
+                                      : colorScheme.outline,
+                                ),
                               ),
-                              onPressed: () => ref.read(favoriteIdsProvider.notifier).toggle(movie.id),
+                              onPressed: () => ref
+                                  .read(favoriteIdsProvider.notifier)
+                                  .toggle(movie.id),
                               icon: Icon(
-                                isFavorite ? Icons.favorite : Icons.favorite_border,
+                                isFavorite
+                                    ? Icons.favorite
+                                    : Icons.favorite_border,
                                 size: 20,
                                 color: isFavorite ? AppColors.primary : null,
                               ),
                               label: Text(
                                 isFavorite ? 'Đã lưu' : 'Lưu lại',
-                                style: TextStyle(color: isFavorite ? AppColors.primary : null),
+                                style: TextStyle(
+                                  color: isFavorite ? AppColors.primary : null,
+                                ),
                               ),
                             ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 32),
-                      Text('Nội dung phim', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                      Text(
+                        'Nội dung phim',
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       const SizedBox(height: 12),
                       Text(
                         movie.overview,
-                        style: theme.textTheme.bodyLarge?.copyWith(color: colorScheme.onSurfaceVariant, height: 1.6),
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                          height: 1.6,
+                        ),
                       ),
                       const SizedBox(height: 32),
                       _RatingSection(movieId: movie.id, ref: ref),
@@ -209,11 +266,16 @@ class MovieDetailScreen extends ConsumerWidget {
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
         title: const Text('Nội dung Premium'),
-        content: Text(requiredTier == 2
-            ? 'Phim này yêu cầu gói VIP (720p). Hãy nâng cấp tài khoản để thưởng thức nhé!'
-            : 'Phim bom tấn đặc sắc này yêu cầu gói Vippro. Nâng cấp ngay nào!'),
+        content: Text(
+          requiredTier == 2
+              ? 'Phim này yêu cầu gói VIP (720p). Hãy nâng cấp tài khoản để thưởng thức nhé!'
+              : 'Phim bom tấn đặc sắc này yêu cầu gói Vippro. Nâng cấp ngay nào!',
+        ),
         actions: [
-          TextButton(onPressed: () => context.pop(), child: const Text('Để sau')),
+          TextButton(
+            onPressed: () => context.pop(),
+            child: const Text('Để sau'),
+          ),
           FilledButton(
             onPressed: () {
               context.pop();
@@ -229,7 +291,11 @@ class MovieDetailScreen extends ConsumerWidget {
 }
 
 class _InfoChip extends StatelessWidget {
-  const _InfoChip({required this.icon, required this.label, this.isAccent = false});
+  const _InfoChip({
+    required this.icon,
+    required this.label,
+    this.isAccent = false,
+  });
   final IconData icon;
   final String label;
   final bool isAccent;
@@ -247,9 +313,18 @@ class _InfoChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: isAccent ? Colors.amber : AppColors.primary),
+          Icon(
+            icon,
+            size: 14,
+            color: isAccent ? Colors.amber : AppColors.primary,
+          ),
           const SizedBox(width: 6),
-          Text(label, style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600)),
+          Text(
+            label,
+            style: theme.textTheme.bodySmall?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ],
       ),
     );
@@ -285,7 +360,12 @@ class _RatingSectionState extends ConsumerState<_RatingSection> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Đánh giá phim này', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+          Text(
+            'Đánh giá phim này',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -295,7 +375,9 @@ class _RatingSectionState extends ConsumerState<_RatingSection> {
               return GestureDetector(
                 onTap: () {
                   setState(() => _currentRating = rating.toDouble());
-                  ref.read(movieRatingsProvider.notifier).setRating(widget.movieId, rating.toDouble());
+                  ref
+                      .read(movieRatingsProvider.notifier)
+                      .setRating(widget.movieId, rating.toDouble());
                 },
                 child: Icon(
                   Icons.star_rounded,
@@ -306,8 +388,14 @@ class _RatingSectionState extends ConsumerState<_RatingSection> {
             }),
           ),
           const SizedBox(height: 12),
-          Text(_currentRating > 0 ? '$_currentRating / 10 điểm' : 'Hãy cho điểm phim này',
-              style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.primary)),
+          Text(
+            _currentRating > 0
+                ? '$_currentRating / 10 điểm'
+                : 'Hãy cho điểm phim này',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.primary,
+            ),
+          ),
         ],
       ),
     );
@@ -325,34 +413,54 @@ class _CommentsSection extends ConsumerStatefulWidget {
 class _CommentsSectionState extends ConsumerState<_CommentsSection> {
   final TextEditingController _commentController = TextEditingController();
 
-  void _submitComment() {
+  Future<void> _submitComment() async {
     final authState = ref.read(authStateProvider);
     if (authState.user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Vui lòng đăng nhập để bình luận')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vui lòng đăng nhập để bình luận')),
+      );
       return;
     }
     if (_commentController.text.trim().isEmpty) return;
 
-    // LẤY ĐIỂM RATING HIỆN TẠI
     final currentRating = ref.read(movieRatingsProvider)[widget.movieId] ?? 0.0;
 
-    ref.read(movieCommentsProvider(widget.movieId).notifier).addComment(
-      _commentController.text.trim(),
-      currentRating,
-    );
-    _commentController.clear();
-    FocusScope.of(context).unfocus();
+    try {
+      // Dùng await để chờ tiến trình đẩy dữ liệu hoàn tất
+      await ref
+          .read(movieCommentsProvider(widget.movieId).notifier)
+          .addComment(_commentController.text.trim(), currentRating);
+
+      // Chỉ khi addComment hoàn tất 100% không sinh lỗi thì mới thực hiện dọn dẹp Text Box
+      _commentController.clear();
+      if (context.mounted) {
+        FocusScope.of(context).unfocus();
+      }
+    } catch (e) {
+      // Bắt lỗi và thông báo cho người dùng
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
+        );
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final comments = ref.watch(movieCommentsProvider(widget.movieId)).value ?? [];
+    final comments =
+        ref.watch(movieCommentsProvider(widget.movieId)).value ?? [];
     final theme = Theme.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Bình luận', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+        Text(
+          'Bình luận',
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         const SizedBox(height: 16),
         TextField(
           controller: _commentController,
@@ -365,7 +473,10 @@ class _CommentsSectionState extends ConsumerState<_CommentsSection> {
               onPressed: _submitComment,
               icon: const Icon(Icons.send_rounded, color: AppColors.primary),
             ),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none,
+            ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide(color: theme.colorScheme.outlineVariant),
@@ -374,14 +485,17 @@ class _CommentsSectionState extends ConsumerState<_CommentsSection> {
         ),
         const SizedBox(height: 24),
         if (comments.isEmpty)
-          const Center(child: Text('Chưa có bình luận nào. Hãy là người đầu tiên!'))
+          const Center(
+            child: Text('Chưa có bình luận nào. Hãy là người đầu tiên!'),
+          )
         else
           ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: comments.length,
             separatorBuilder: (_, __) => const SizedBox(height: 16),
-            itemBuilder: (_, index) => _CommentTile(comment: comments[index], movieId: widget.movieId),
+            itemBuilder: (_, index) =>
+                _CommentTile(comment: comments[index], movieId: widget.movieId),
           ),
       ],
     );
@@ -413,22 +527,68 @@ class _CommentTile extends ConsumerWidget {
               CircleAvatar(
                 radius: 18,
                 backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
-                child: Text(comment.author[0].toUpperCase(), style: TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.bold)),
+                child: Text(
+                  comment.author[0].toUpperCase(),
+                  style: TextStyle(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(comment.author, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
-                    Text(comment.formattedDate, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                    Text(
+                      comment.author,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      comment.formattedDate,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
                   ],
                 ),
               ),
               if (isOwner)
                 IconButton(
-                  icon: const Icon(Icons.delete_outline_rounded, size: 20, color: Colors.redAccent),
-                  onPressed: () => ref.read(movieCommentsProvider(movieId).notifier).deleteComment(int.parse(comment.id)),
+                  icon: const Icon(
+                    Icons.delete_outline_rounded,
+                    size: 20,
+                    color: Colors.redAccent,
+                  ),
+                  onPressed: () async {
+                    // Dùng tryParse thay vì parse để tránh văng app khi ép kiểu
+                    final parsedId = int.tryParse(comment.id);
+                    if (parsedId != null) {
+                      try {
+                        await ref
+                            .read(movieCommentsProvider(movieId).notifier)
+                            .deleteComment(parsedId);
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                e.toString().replaceAll('Exception: ', ''),
+                              ),
+                            ),
+                          );
+                        }
+                      }
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('ID bình luận không hợp lệ.'),
+                        ),
+                      );
+                    }
+                  },
                 ),
             ],
           ),
