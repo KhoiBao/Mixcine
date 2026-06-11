@@ -5,8 +5,10 @@ import '../../core/services/auth_service.dart';
 import '../../core/services/app_preferences.dart';
 import 'app_providers.dart';
 
+// 1. Khai báo Service dưới tầng Data
 final authServiceProvider = Provider<AuthService>((ref) => AuthService());
 
+// 2. Khai báo Trạng thái State quản lý UI
 final authStateProvider = NotifierProvider<AuthNotifier, AuthState>(
   AuthNotifier.new,
 );
@@ -15,7 +17,7 @@ class AuthState {
   const AuthState({this.token, this.user, this.isLoading = false, this.error});
 
   final String? token;
-  final UserModel? user;
+  final UserModel? user; // Quản lý trạng thái bằng UserModel
   final bool isLoading;
   final String? error;
 
@@ -55,11 +57,18 @@ class AuthNotifier extends Notifier<AuthState> {
         final fallbackUser = UserModel(
           id: session.user.id,
           email: session.user.email ?? '',
-          fullName: session.user.userMetadata?['full_name'] ?? session.user.userMetadata?['name'] ?? 'Người dùng',
+          fullName:
+              session.user.userMetadata?['full_name'] ??
+              session.user.userMetadata?['name'] ??
+              'Người dùng',
           plan: 'FREE',
         );
 
-        state = AuthState(token: session.accessToken, user: fallbackUser, isLoading: false);
+        state = AuthState(
+          token: session.accessToken,
+          user: fallbackUser,
+          isLoading: false,
+        );
         await _prefs.setAuthToken(session.accessToken);
         await _prefs.setUserData(fallbackUser);
 
@@ -92,7 +101,10 @@ class AuthNotifier extends Notifier<AuthState> {
   Future<void> login(String email, String password) async {
     state = const AuthState(isLoading: true);
     try {
-      final (token, user) = await _service.login(email: email, password: password);
+      final (token, user) = await _service.login(
+        email: email,
+        password: password,
+      );
       await _prefs.setAuthToken(token);
       await _prefs.setUserData(user);
       state = AuthState(token: token, user: user, isLoading: false);
@@ -101,7 +113,12 @@ class AuthNotifier extends Notifier<AuthState> {
     }
   }
 
-  Future<void> register(String email, String password, String fullName, String phoneNumber) async {
+  Future<void> register(
+    String email,
+    String password,
+    String fullName,
+    String phoneNumber,
+  ) async {
     state = const AuthState(isLoading: true);
     try {
       final (token, user) = await _service.register(
@@ -128,7 +145,6 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   Future<void> logout() async {
-    await _service.signOut();
     await _prefs.setAuthToken(null);
     await _prefs.setUserData(null);
     state = const AuthState();
@@ -148,14 +164,45 @@ class AuthNotifier extends Notifier<AuthState> {
     }
   }
 
-  Future<void> updateProfile(UserModel updatedUser) async {
+  // =======================================================================
+  // KHÔNG CÒN LỖI COPYWITH: Chấp nhận truyền thẳng dữ liệu thô, tự build Model sạch
+  // =======================================================================
+  Future<void> updateProfile({
+    required String newFullName,
+    required String newPhoneNumber,
+    List<int>? imageBytes,
+    String? fileName,
+  }) async {
+    final currentUser = state.user;
+    if (currentUser == null) return;
+
     state = state.copyWith(isLoading: true, error: null);
     try {
-      await _service.updateProfile(updatedUser);
-      await _prefs.setUserData(updatedUser);
-      state = state.copyWith(user: updatedUser, isLoading: false);
+      // Gọi trực tiếp xuống AuthService để update dữ liệu lên Supabase
+      final newAvatarUrl = await _service.updateProfile(
+        newFullName: newFullName,
+        newPhoneNumber: newPhoneNumber,
+        imageBytes: imageBytes,
+        fileName: fileName,
+      );
+
+      // Tạo thủ công đối tượng mới thay vì gọi copyWith của UserModel phòng trường hợp file model bị lỗi cú pháp
+      final finalUser = UserModel(
+        id: currentUser.id,
+        email: currentUser.email,
+        fullName: newFullName,
+        phoneNumber: newPhoneNumber,
+        avatar: newAvatarUrl ?? currentUser.avatar,
+        plan: currentUser.plan,
+      );
+
+      // Đồng bộ local storage và giao diện
+      await _prefs.setUserData(finalUser);
+      state = AuthState(token: state.token, user: finalUser, isLoading: false);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
     }
+    await reloadUserFromDb();
+    state = state.copyWith(isLoading: false);
   }
 }

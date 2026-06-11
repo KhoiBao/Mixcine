@@ -5,14 +5,16 @@ class AuthRemoteDataSource {
   final _client = Supabase.instance.client;
 
   // 1. ĐĂNG KÝ
-  Future<void> register(String email, String password, String fullName, String phoneNumber) async {
+  Future<void> register(
+    String email,
+    String password,
+    String fullName,
+    String phoneNumber,
+  ) async {
     await _client.auth.signUp(
       email: email,
       password: password,
-      data: {
-        'full_name': fullName,
-        'phone_number': phoneNumber,
-      },
+      data: {'full_name': fullName, 'phone_number': phoneNumber},
     );
   }
 
@@ -44,14 +46,18 @@ class AuthRemoteDataSource {
     );
   }
 
-  // Helper để tạo profile tạm nếu DB chưa kịp cập nhật
+  // Helper để tạo profile tạm nếu DB chưa kịp cập nhật (Cập nhật thêm avatar_url từ metadata)
   Map<String, dynamic> _createFallbackProfile(User user) {
     return {
       'id': user.id,
       'email': user.email,
-      'full_name': user.userMetadata?['full_name'] ?? user.userMetadata?['name'] ?? 'Người dùng',
+      'full_name':
+          user.userMetadata?['full_name'] ??
+          user.userMetadata?['name'] ??
+          'Người dùng',
       'phone_number': user.userMetadata?['phone_number'] ?? '',
       'plan': 'FREE',
+      'avatar_url': user.userMetadata?['avatar_url'] ?? '',
     };
   }
 
@@ -62,7 +68,7 @@ class AuthRemoteDataSource {
         .select()
         .eq('email', email.trim())
         .maybeSingle();
-    
+
     if (profile == null) {
       final currentUser = _client.auth.currentUser;
       if (currentUser != null && currentUser.email == email) {
@@ -86,12 +92,22 @@ class AuthRemoteDataSource {
         .eq('email', email.trim());
   }
 
-  Future<void> updateProfile(String userId, String fullName, String phoneNumber) async {
+  // =======================================================================
+  // CHỈNH SỬA HÀM UPDATEPROFILE: Nhận thêm avatarUrl và lưu vào Supabase DB
+  // =======================================================================
+  Future<void> updateProfile(
+    String userId,
+    String fullName,
+    String phoneNumber,
+    String? avatarUrl,
+  ) async {
     await _client
         .from('profiles')
         .update({
           'full_name': fullName,
           'phone_number': phoneNumber,
+          if (avatarUrl != null)
+            'avatar_url': avatarUrl, // Chỉ đẩy lên khi có đường dẫn ảnh mới
         })
         .eq('id', userId);
   }
