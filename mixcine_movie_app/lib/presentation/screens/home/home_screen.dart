@@ -6,9 +6,11 @@ import '../../../core/config/app_branding.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../domain/entities/movie.dart';
 import '../../../domain/entities/movie_section.dart';
+import '../../../domain/entities/payment_plan.dart'; // Thêm import
 import '../../providers/app_providers.dart';
 import '../../providers/favorites_provider.dart';
 import '../../providers/home_provider.dart';
+import '../../providers/subscription_provider.dart'; // Thêm import
 import '../../widgets/async_value_builder.dart';
 import '../../widgets/movie_poster_card.dart';
 import '../../widgets/primary_button.dart';
@@ -46,6 +48,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final homeState = ref.watch(homeProvider);
     final favoriteIds = ref.watch(favoriteIdsProvider).value ?? <int>{};
     final theme = Theme.of(context);
+    
+    // KIỂM TRA QUYỀN QUẢNG CÁO
+    final subscription = ref.watch(subscriptionProvider);
+    final isFree = (subscription?.plan ?? PaymentPlan.free) == PaymentPlan.free;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -88,10 +94,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               height: 280,
                               child: ListView.separated(
                                 scrollDirection: Axis.horizontal,
-                                itemCount: section.movies.length,
+                                // Tăng thêm 1 slot nếu là User FREE
+                                itemCount: section.movies.length + (isFree ? 1 : 0),
                                 separatorBuilder: (context, _) => const SizedBox(width: 14),
                                 itemBuilder: (context, index) {
-                                  final movie = section.movies[index];
+                                  // Chèn quảng cáo vào vị trí số 2 (index 1)
+                                  if (isFree && index == 1) {
+                                    return const SizedBox(width: 158, child: _Mixi88MiniCard());
+                                  }
+                                  
+                                  // Tính toán lại index phim thực tế
+                                  final movieIndex = (isFree && index > 1) ? index - 1 : index;
+                                  if (movieIndex >= section.movies.length) return const SizedBox.shrink();
+                                  
+                                  final movie = section.movies[movieIndex];
                                   return SizedBox(
                                     width: 158,
                                     child: MoviePosterCard(
@@ -116,14 +132,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     sliver: SliverGrid(
                       delegate: SliverChildBuilderDelegate((context, index) {
-                        final movie = data.discoverMovies[index];
+                        // Chèn vào vị trí số 3 (index 2) trong Grid Khám phá
+                        if (isFree && index == 2) {
+                          return const _Mixi88MiniCard();
+                        }
+                        
+                        final movieIndex = (isFree && index > 2) ? index - 1 : index;
+                        if (movieIndex >= data.discoverMovies.length) return const SizedBox.shrink();
+
+                        final movie = data.discoverMovies[movieIndex];
                         return MoviePosterCard(
                           movie: movie,
                           isFavorite: favoriteIds.contains(movie.id),
                           onTap: () => context.push('/movie/${movie.id}'),
                           onFavoriteTap: () => ref.read(favoriteIdsProvider.notifier).toggle(movie.id),
                         );
-                      }, childCount: data.discoverMovies.length),
+                      }, childCount: data.discoverMovies.length + (isFree ? 1 : 0)),
                       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
                         crossAxisSpacing: 14,
@@ -148,6 +172,86 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             );
           },
+        ),
+      ),
+    );
+  }
+}
+
+// COMPONENT QUẢNG CÁO TROLL
+class _Mixi88MiniCard extends StatelessWidget {
+  const _Mixi88MiniCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Colors.red, Color(0xFF1A1A1A)],
+        ),
+        boxShadow: [
+          BoxShadow(color: Colors.red.withOpacity(0.2), blurRadius: 8, offset: const Offset(0, 4)),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Stack(
+          children: [
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.casino_rounded, color: Colors.white, size: 40),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'MIXI88',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 22,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                  const Text(
+                    'UY TÍN SỐ 1',
+                    style: TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 20),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.yellow,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Text(
+                      'NHẬN 88K',
+                      style: TextStyle(color: Colors.black, fontSize: 10, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Hiệu ứng nhấp nháy troll
+            Positioned.fill(
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('💰 Mixi88 hân hạnh tài trợ! Nạp VIP để tắt quảng cáo này.'),
+                        backgroundColor: Colors.redAccent,
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -184,7 +288,6 @@ class _Header extends StatelessWidget {
                 ],
               ),
             ),
-            // 💡 SỬA LỖI: Biểu tượng Profile không còn bị "đen" ở Light Mode
             InkWell(
               onTap: onProfileTap,
               borderRadius: BorderRadius.circular(16),
@@ -205,7 +308,6 @@ class _Header extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 20),
-        // 💡 SỬA LỖI: Thanh Search đồng bộ với Theme
         InkWell(
           onTap: onSearchTap,
           borderRadius: BorderRadius.circular(20),
@@ -269,7 +371,6 @@ class _HeroBanner extends StatelessWidget {
               child: const Text('PHIM NỔI BẬT', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
             ),
             const SizedBox(height: 12),
-            // 💡 SỬA LỖI: Luôn dùng chữ TRẮNG cho Dune Legacy vì nền ảnh tối
             Text(movie.title, style: theme.textTheme.headlineMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
             const SizedBox(height: 6),
             Text('${movie.year} • ${movie.durationLabel} • ${movie.ratingLabel}',
