@@ -15,7 +15,7 @@ enum PaymentPlan {
       case PaymentPlan.free:
         return 'Phim 480p, 1 thiết bị, có quảng cáo';
       case PaymentPlan.vip:
-        return 'Phim HD 720p, 2 thiết bị, tải offline';
+        return 'Phim HD 720p, 2 thiết bị, tải offline, không quảng cáo';
       case PaymentPlan.vipPro:
         return 'Phim 4K, 4 thiết bị, tải offline, không quảng cáo';
     }
@@ -34,7 +34,8 @@ enum PaymentPlan {
 
   bool get allowOfflineDownload => this != PaymentPlan.free;
 
-  bool get hasAds => this == PaymentPlan.free || this == PaymentPlan.vip;
+  // SỬA TẠI ĐÂY: Chỉ có FREE mới có quảng cáo
+  bool get hasAds => this == PaymentPlan.free;
 
   static PaymentPlan fromId(String id) {
     return PaymentPlan.values.firstWhere(

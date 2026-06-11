@@ -29,7 +29,7 @@ class MovieCommentsNotifier
 
   Future<void> addComment(String text, double rating) async {
     final user = ref.read(authStateProvider).user;
-
+    
     // KIỂM TRA QUAN TRỌNG: Dùng user.id (UUID) thay vì email để tránh lỗi 22P02
     if (user == null || user.id == null) return;
 

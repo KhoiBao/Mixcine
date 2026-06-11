@@ -40,7 +40,14 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
 
   void _handleResult(String url) async {
     final uri = Uri.parse(url);
-    final userId = ref.read(authStateProvider).user?.email ?? 'guest';
+    // SỬA TẠI ĐÂY: Dùng user?.id (UUID) chứ không dùng email
+    final user = ref.read(authStateProvider).user;
+    final userId = user?.id ?? '';
+
+    if (userId.isEmpty) {
+      if (mounted) context.pop();
+      return;
+    }
 
     final success = await ref.read(paymentProvider.notifier).processPaymentResult(
       result: uri.queryParameters,
@@ -64,9 +71,12 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
           // NÚT SKIP THANH TOÁN
           TextButton.icon(
             onPressed: () async {
-              final userId = ref.read(authStateProvider).user?.email ?? 'guest';
+              // SỬA TẠI ĐÂY: Dùng user?.id (UUID)
+              final user = ref.read(authStateProvider).user;
+              final userId = user?.id ?? '';
 
-              // Vẫn gọi hàm xử lý, thêm vài data giả cho nó khỏi văng lỗi parse
+              if (userId.isEmpty) return;
+
               await ref.read(paymentProvider.notifier).processPaymentResult(
                 result: {
                   'vnp_ResponseCode': '00',
@@ -77,7 +87,6 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                 userId: userId,
               );
 
-              // Bỏ qua check success luôn, ép navigate thẳng sang màn hình Success để test
               if (context.mounted) {
                 context.pushReplacement('/payment-success', extra: widget.plan);
               }
