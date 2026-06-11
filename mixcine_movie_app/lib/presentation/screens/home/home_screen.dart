@@ -288,6 +288,7 @@ class _Header extends StatelessWidget {
                 ],
               ),
             ),
+            // 💡 SỬA LỖI: Biểu tượng Profile không còn bị "đen" ở Light Mode
             InkWell(
               onTap: onProfileTap,
               borderRadius: BorderRadius.circular(16),
@@ -308,6 +309,7 @@ class _Header extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 20),
+        // 💡 SỬA LỖI: Thanh Search đồng bộ với Theme
         InkWell(
           onTap: onSearchTap,
           borderRadius: BorderRadius.circular(20),
@@ -371,6 +373,7 @@ class _HeroBanner extends StatelessWidget {
               child: const Text('PHIM NỔI BẬT', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
             ),
             const SizedBox(height: 12),
+            // 💡 SỬA LỖI: Luôn dùng chữ TRẮNG cho Dune Legacy vì nền ảnh tối
             Text(movie.title, style: theme.textTheme.headlineMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
             const SizedBox(height: 6),
             Text('${movie.year} • ${movie.durationLabel} • ${movie.ratingLabel}',

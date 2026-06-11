@@ -5,14 +5,16 @@ class AuthRemoteDataSource {
   final _client = Supabase.instance.client;
 
   // 1. ĐĂNG KÝ
-  Future<void> register(String email, String password, String fullName, String phoneNumber) async {
+  Future<void> register(
+    String email,
+    String password,
+    String fullName,
+    String phoneNumber,
+  ) async {
     await _client.auth.signUp(
       email: email,
       password: password,
-      data: {
-        'full_name': fullName,
-        'phone_number': phoneNumber,
-      },
+      data: {'full_name': fullName, 'phone_number': phoneNumber},
     );
   }
 
@@ -31,6 +33,7 @@ class AuthRemoteDataSource {
         .eq('id', response.user!.id)
         .maybeSingle();
 
+    // Nếu không thấy profile trong DB, dùng thông tin từ Auth làm dự phòng
     return profile ?? _createFallbackProfile(response.user!);
   }
 
@@ -38,8 +41,24 @@ class AuthRemoteDataSource {
   Future<void> signInWithGoogle() async {
     await _client.auth.signInWithOAuth(
       OAuthProvider.google,
+      // redirectTo phải khớp với Deep Link trong AndroidManifest.xml
       redirectTo: kIsWeb ? null : 'io.supabase.movieapp://callback',
     );
+  }
+
+  // Helper để tạo profile tạm nếu DB chưa kịp cập nhật (Cập nhật thêm avatar_url từ metadata)
+  Map<String, dynamic> _createFallbackProfile(User user) {
+    return {
+      'id': user.id,
+      'email': user.email,
+      'full_name':
+          user.userMetadata?['full_name'] ??
+          user.userMetadata?['name'] ??
+          'Người dùng',
+      'phone_number': user.userMetadata?['phone_number'] ?? '',
+      'plan': 'FREE',
+      'avatar_url': user.userMetadata?['avatar_url'] ?? '',
+    };
   }
 
   Map<String, dynamic> _createFallbackProfile(User user) {
@@ -93,6 +112,30 @@ class AuthRemoteDataSource {
       'full_name': fullName,
       'phone_number': phoneNumber,
     })
+  Future<void> updateUserPlan(String email, String newPlan) async {
+    await _client
+        .from('profiles')
+        .update({'plan': newPlan})
+        .eq('email', email.trim());
+  }
+
+  // =======================================================================
+  // CHỈNH SỬA HÀM UPDATEPROFILE: Nhận thêm avatarUrl và lưu vào Supabase DB
+  // =======================================================================
+  Future<void> updateProfile(
+    String userId,
+    String fullName,
+    String phoneNumber,
+    String? avatarUrl,
+  ) async {
+    await _client
+        .from('profiles')
+        .update({
+          'full_name': fullName,
+          'phone_number': phoneNumber,
+          if (avatarUrl != null)
+            'avatar_url': avatarUrl, // Chỉ đẩy lên khi có đường dẫn ảnh mới
+        })
         .eq('id', userId);
   }
 

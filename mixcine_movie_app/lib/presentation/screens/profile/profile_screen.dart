@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../notification/notification_screen.dart';
 import '../../../core/config/app_branding.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../domain/entities/payment_plan.dart';
@@ -29,10 +30,17 @@ class ProfileScreen extends ConsumerWidget {
     final themeMode = ref.watch(themeProvider);
     final currentIsDark = themeMode == ThemeMode.dark;
 
+    // 🚀 Theo dõi trạng thái Theme hiện tại
+    final themeMode = ref.watch(themeProvider);
+    final currentIsDark = themeMode == ThemeMode.dark;
+
     // 🚀 Logic xác định gói cước và huy hiệu
     final subscription = ref.watch(subscriptionProvider);
-    final isPremium = subscription?.isActive == true && subscription?.plan == PaymentPlan.vipPro;
-    final isVip = subscription?.isActive == true && subscription?.plan == PaymentPlan.vip;
+    final isPremium =
+        subscription?.isActive == true &&
+        subscription?.plan == PaymentPlan.vipPro;
+    final isVip =
+        subscription?.isActive == true && subscription?.plan == PaymentPlan.vip;
 
     String planName = 'Cày chay (Free)';
     Color planColor = isDark ? Colors.grey : Colors.grey.shade600;
@@ -66,7 +74,9 @@ class ProfileScreen extends ConsumerWidget {
                   color: theme.cardTheme.color,
                   borderRadius: BorderRadius.circular(32),
                   border: Border.all(
-                    color: isDark ? Colors.white10 : colorScheme.outline.withOpacity(0.5),
+                    color: isDark
+                        ? Colors.white10
+                        : colorScheme.outline.withOpacity(0.5),
                     width: 1,
                   ),
                   boxShadow: [
@@ -80,10 +90,26 @@ class ProfileScreen extends ConsumerWidget {
                 ),
                 child: Row(
                   children: [
+                    // =======================================================================
+                    // KHUNG TRÒN HIỂN THỊ AVATAR ĐÃ ĐỒNG BỘ REALTIME TỪ DATABASE
+                    // =======================================================================
+                    // Thay phần CircleAvatar trong ProfileScreen
                     CircleAvatar(
                       radius: 36,
                       backgroundColor: colorScheme.primary.withOpacity(0.12),
-                      child: Icon(Icons.person_rounded, size: 38, color: colorScheme.primary),
+                      backgroundImage:
+                          (user?.avatar != null && user!.avatar!.isNotEmpty)
+                          ? NetworkImage(
+                              "${user!.avatar!}?t=${DateTime.now().millisecondsSinceEpoch}",
+                            )
+                          : null,
+                      child: (user?.avatar == null || user!.avatar!.isEmpty)
+                          ? Icon(
+                              Icons.person_rounded,
+                              size: 38,
+                              color: colorScheme.primary,
+                            )
+                          : null,
                     ),
                     const SizedBox(width: 20),
                     Expanded(
@@ -92,7 +118,9 @@ class ProfileScreen extends ConsumerWidget {
                         children: [
                           Text(
                             user?.fullName ?? user?.email ?? 'Người dùng',
-                            style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           const SizedBox(height: 4),
                           Text(
@@ -104,11 +132,16 @@ class ProfileScreen extends ConsumerWidget {
                           const SizedBox(height: 12),
                           // Huy hiệu gói cước tinh tế
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
                             decoration: BoxDecoration(
                               color: planColor.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(100),
-                              border: Border.all(color: planColor.withOpacity(0.3)),
+                              border: Border.all(
+                                color: planColor.withOpacity(0.3),
+                              ),
                             ),
                             child: Text(
                               planName,
@@ -145,9 +178,12 @@ class ProfileScreen extends ConsumerWidget {
                     child: _StatCard(
                       label: 'Giao diện',
                       value: currentIsDark ? 'Tối' : 'Sáng',
-                      icon: currentIsDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+                      icon: currentIsDark
+                          ? Icons.dark_mode_rounded
+                          : Icons.light_mode_rounded,
                       accentColor: Colors.blueAccent,
-                      onTap: () => ref.read(themeProvider.notifier).toggleTheme(),
+                      onTap: () =>
+                          ref.read(themeProvider.notifier).toggleTheme(),
                     ),
                   ),
                 ],
@@ -156,7 +192,9 @@ class ProfileScreen extends ConsumerWidget {
               const SizedBox(height: 32),
               Text(
                 'Cài đặt',
-                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 16),
 
@@ -166,9 +204,18 @@ class ProfileScreen extends ConsumerWidget {
                 title: 'Chỉnh sửa hồ sơ',
                 onTap: () => context.push('/edit-profile'),
               ),
-              const _ProfileTile(
+
+              _ProfileTile(
                 icon: Icons.notifications_active_outlined,
                 title: 'Thông báo',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => NotificationScreen(),
+                    ),
+                  );
+                },
               ),
               _ProfileTile(
                 icon: Icons.info_outline_rounded,
@@ -226,7 +273,9 @@ class _StatCard extends StatelessWidget {
             color: theme.cardTheme.color,
             borderRadius: BorderRadius.circular(28),
             border: Border.all(
-              color: isDark ? Colors.white10 : theme.colorScheme.outline.withOpacity(0.5),
+              color: isDark
+                  ? Colors.white10
+                  : theme.colorScheme.outline.withOpacity(0.5),
             ),
           ),
           child: Column(
@@ -243,7 +292,9 @@ class _StatCard extends StatelessWidget {
               const SizedBox(height: 16),
               Text(
                 value,
-                style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 4),
               Text(
@@ -284,7 +335,9 @@ class _ProfileTile extends StatelessWidget {
         color: theme.cardTheme.color,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isDark ? Colors.white10 : theme.colorScheme.outline.withOpacity(0.5),
+          color: isDark
+              ? Colors.white10
+              : theme.colorScheme.outline.withOpacity(0.5),
         ),
       ),
       child: ListTile(
@@ -301,10 +354,18 @@ class _ProfileTile extends StatelessWidget {
         ),
         title: Text(
           title,
-          style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
         ),
         subtitle: subtitle != null && subtitle!.isNotEmpty
-            ? Text(subtitle!, style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12))
+            ? Text(
+                subtitle!,
+                style: TextStyle(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontSize: 12,
+                ),
+              )
             : null,
         trailing: Icon(
           Icons.chevron_right_rounded,

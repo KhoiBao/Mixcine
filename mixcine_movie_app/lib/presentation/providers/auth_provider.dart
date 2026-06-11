@@ -6,8 +6,10 @@ import '../../core/services/auth_service.dart';
 import '../../core/services/app_preferences.dart';
 import 'app_providers.dart';
 
+// 1. Khai báo Service dưới tầng Data
 final authServiceProvider = Provider<AuthService>((ref) => AuthService());
 
+// 2. Khai báo Trạng thái State quản lý UI
 final authStateProvider = NotifierProvider<AuthNotifier, AuthState>(
   AuthNotifier.new,
 );
@@ -16,7 +18,7 @@ class AuthState {
   const AuthState({this.token, this.user, this.isLoading = false, this.error});
 
   final String? token;
-  final UserModel? user;
+  final UserModel? user; // Quản lý trạng thái bằng UserModel
   final bool isLoading;
   final String? error;
 
@@ -52,17 +54,26 @@ class AuthNotifier extends Notifier<AuthState> {
       final event = data.event;
 
       if (event == AuthChangeEvent.signedIn && session != null) {
+        // Ưu tiên lấy user từ Auth metadata ngay lập tức để không bị null
         final fallbackUser = UserModel(
           id: session.user.id,
           email: session.user.email ?? '',
-          fullName: session.user.userMetadata?['full_name'] ?? session.user.userMetadata?['name'] ?? 'Người dùng',
+          fullName:
+              session.user.userMetadata?['full_name'] ??
+              session.user.userMetadata?['name'] ??
+              'Người dùng',
           plan: 'FREE',
         );
 
-        state = AuthState(token: session.accessToken, user: fallbackUser, isLoading: false);
+        state = AuthState(
+          token: session.accessToken,
+          user: fallbackUser,
+          isLoading: false,
+        );
         await _prefs.setAuthToken(session.accessToken);
         await _prefs.setUserData(fallbackUser);
 
+        // Sau đó mới thử cập nhật từ Profile DB (nếu có)
         try {
           final dbUser = await _service.getUser(session.user.email!);
           if (dbUser != null) {
@@ -81,6 +92,12 @@ class AuthNotifier extends Notifier<AuthState> {
   Future<void> _load() async {
     final token = await _prefs.getAuthToken();
     final user = await _prefs.getUserData();
+    if (user != null && user.id != null) {
+      if (user.id!.length < 30 || user.id!.contains('@')) {
+        await logout();
+        return;
+      }
+    }
     state = AuthState(token: token, user: user);
   }
 
@@ -148,14 +165,45 @@ class AuthNotifier extends Notifier<AuthState> {
     }
   }
 
-  Future<void> updateProfile(UserModel updatedUser) async {
+  // =======================================================================
+  // KHÔNG CÒN LỖI COPYWITH: Chấp nhận truyền thẳng dữ liệu thô, tự build Model sạch
+  // =======================================================================
+  Future<void> updateProfile({
+    required String newFullName,
+    required String newPhoneNumber,
+    List<int>? imageBytes,
+    String? fileName,
+  }) async {
+    final currentUser = state.user;
+    if (currentUser == null) return;
+
     state = state.copyWith(isLoading: true, error: null);
     try {
-      await _service.updateProfile(updatedUser);
-      await _prefs.setUserData(updatedUser);
-      state = state.copyWith(user: updatedUser, isLoading: false);
+      // Gọi trực tiếp xuống AuthService để update dữ liệu lên Supabase
+      final newAvatarUrl = await _service.updateProfile(
+        newFullName: newFullName,
+        newPhoneNumber: newPhoneNumber,
+        imageBytes: imageBytes,
+        fileName: fileName,
+      );
+
+      // Tạo thủ công đối tượng mới thay vì gọi copyWith của UserModel phòng trường hợp file model bị lỗi cú pháp
+      final finalUser = UserModel(
+        id: currentUser.id,
+        email: currentUser.email,
+        fullName: newFullName,
+        phoneNumber: newPhoneNumber,
+        avatar: newAvatarUrl ?? currentUser.avatar,
+        plan: currentUser.plan,
+      );
+
+      // Đồng bộ local storage và giao diện
+      await _prefs.setUserData(finalUser);
+      state = AuthState(token: state.token, user: finalUser, isLoading: false);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
     }
+    await reloadUserFromDb();
+    state = state.copyWith(isLoading: false);
   }
 }

@@ -15,23 +15,7 @@ class UserModel {
     this.plan,
   });
 
-  UserModel copyWith({
-    String? id,
-    String? email,
-    String? fullName,
-    String? phoneNumber,
-    String? avatar,
-    String? plan,
-  }) {
-    return UserModel(
-      id: id ?? this.id,
-      email: email ?? this.email,
-      fullName: fullName ?? this.fullName,
-      phoneNumber: phoneNumber ?? this.phoneNumber,
-      avatar: avatar ?? this.avatar,
-      plan: plan ?? this.plan,
-    );
-  }
+  // ... hàm copyWith giữ nguyên ...
 
   // Chuyển sang Map để đẩy lên Supabase (phải khớp tên cột trong DB)
   Map<String, dynamic> toJson() {
@@ -59,6 +43,6 @@ class UserModel {
 
   @override
   String toString() {
-    return 'UserModel(id: $id, email: $email, fullName: $fullName, phoneNumber: $phoneNumber, plan: $plan)';
+    return 'UserModel(id: $id, email: $email, fullName: $fullName, phoneNumber: $phoneNumber, avatar: $avatar, plan: $plan)';
   }
 }

@@ -42,7 +42,7 @@ class ReviewRepositoryImpl implements ReviewRepository {
             rating: model.rating,
             createdAt:
                 DateTime.tryParse(model.createdAt) ??
-                DateTime.now(), // Parse chuỗi thời gian về DateTime
+                DateTime.now().toUtc(), // Parse chuỗi thời gian về DateTime
           ),
         )
         .toList();
