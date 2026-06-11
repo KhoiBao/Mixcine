@@ -24,8 +24,11 @@ class ProfileScreen extends ConsumerWidget {
 
     final authState = ref.watch(authStateProvider);
     final user = authState.user;
-    final favorites =
-        ref.watch(favoriteMoviesProvider).value ?? const <dynamic>[];
+    final favorites = ref.watch(favoriteMoviesProvider).value ?? const <dynamic>[];
+
+    // 🚀 Theo dõi trạng thái Theme hiện tại
+    final themeMode = ref.watch(themeProvider);
+    final currentIsDark = themeMode == ThemeMode.dark;
 
     // 🚀 Theo dõi trạng thái Theme hiện tại
     final themeMode = ref.watch(themeProvider);

@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:mixcine_movie_app/data/models/user_model.dart';
+import 'package:mixcine_movie_app/presentation/providers/subscription_provider.dart';
 import '../../core/services/auth_service.dart';
 import '../../core/services/app_preferences.dart';
 import 'app_providers.dart';
@@ -78,6 +79,8 @@ class AuthNotifier extends Notifier<AuthState> {
           if (dbUser != null) {
             state = state.copyWith(user: dbUser);
             await _prefs.setUserData(dbUser);
+            // ĐỒNG BỘ GÓI CƯỚC TỪ DB VỀ LOCAL
+            ref.read(subscriptionProvider.notifier).syncWithUserPlan(dbUser.plan);
           }
         } catch (_) {}
       } else if (event == AuthChangeEvent.signedOut) {
@@ -101,24 +104,18 @@ class AuthNotifier extends Notifier<AuthState> {
   Future<void> login(String email, String password) async {
     state = const AuthState(isLoading: true);
     try {
-      final (token, user) = await _service.login(
-        email: email,
-        password: password,
-      );
+      final (token, user) = await _service.login(email: email, password: password);
       await _prefs.setAuthToken(token);
       await _prefs.setUserData(user);
       state = AuthState(token: token, user: user, isLoading: false);
+      // Đồng bộ gói cước
+      ref.read(subscriptionProvider.notifier).syncWithUserPlan(user.plan);
     } catch (e) {
       state = AuthState(isLoading: false, error: e.toString());
     }
   }
 
-  Future<void> register(
-    String email,
-    String password,
-    String fullName,
-    String phoneNumber,
-  ) async {
+  Future<void> register(String email, String password, String fullName, String phoneNumber) async {
     state = const AuthState(isLoading: true);
     try {
       final (token, user) = await _service.register(
@@ -145,6 +142,9 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   Future<void> logout() async {
+    // Gọi clear subscription trước khi logout để xóa data local
+    ref.read(subscriptionProvider.notifier).clear();
+    await _service.signOut();
     await _prefs.setAuthToken(null);
     await _prefs.setUserData(null);
     state = const AuthState();
@@ -161,6 +161,7 @@ class AuthNotifier extends Notifier<AuthState> {
     if (updatedUser != null) {
       await _prefs.setUserData(updatedUser);
       state = state.copyWith(user: updatedUser);
+      ref.read(subscriptionProvider.notifier).syncWithUserPlan(updatedUser.plan);
     }
   }
 

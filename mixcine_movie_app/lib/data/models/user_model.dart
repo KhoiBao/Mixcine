@@ -1,10 +1,10 @@
 class UserModel {
-  final String? id;
+  final String? id; // Đây là UUID từ Supabase
   final String email;
   final String? fullName;
   final String? phoneNumber;
   final String? avatar;
-  final String? plan;
+  final String? plan; // Lưu gói cước: FREE, VIP, VIP_PRO
 
   const UserModel({
     this.id,
@@ -17,27 +17,27 @@ class UserModel {
 
   // ... hàm copyWith giữ nguyên ...
 
+  // Chuyển sang Map để đẩy lên Supabase (phải khớp tên cột trong DB)
   Map<String, dynamic> toJson() {
     return {
       'id': id,
       'email': email,
-      'full_name': fullName,
-      'phone_number': phoneNumber,
-      // ĐỒNG BỘ TẠI ĐÂY: Gửi lên đúng tên cột 'avatar_url' trên Database
-      'avatar_url': avatar,
-      'plan': plan,
+      'full_name': fullName, // Khớp cột full_name
+      'phone_number': phoneNumber, // Khớp cột phone_number
+      'avatar': avatar,
+      'plan': plan, // Khớp cột plan
     };
   }
 
+  // Khởi tạo từ JSON trả về của Supabase
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
       id: json['id']?.toString(),
       email: json['email'] as String? ?? '',
       fullName: json['full_name'] as String?,
       phoneNumber: json['phone_number']?.toString(),
-      // ĐỒNG BỘ TẠI ĐÂY: Đọc từ trường 'avatar_url' hoặc 'avatar' đề phòng nhóm dùng cả hai
-      avatar: (json['avatar_url'] ?? json['avatar']) as String?,
-      plan: json['plan'] as String?,
+      avatar: json['avatar'] as String?,
+      plan: json['plan'] as String? ?? 'FREE', // Mặc định là FREE nếu null
     );
   }
 

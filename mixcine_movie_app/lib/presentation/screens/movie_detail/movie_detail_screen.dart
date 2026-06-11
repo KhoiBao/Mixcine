@@ -51,9 +51,7 @@ class MovieDetailScreen extends ConsumerWidget {
                   Padding(
                     padding: const EdgeInsets.only(right: 12),
                     child: IconButton(
-                      onPressed: () => ref
-                          .read(favoriteIdsProvider.notifier)
-                          .toggle(movie.id),
+                      onPressed: () => ref.read(favoriteIdsProvider.notifier).toggle(movie.id),
                       icon: Icon(
                         isFavorite ? Icons.favorite : Icons.favorite_border,
                         color: isFavorite
