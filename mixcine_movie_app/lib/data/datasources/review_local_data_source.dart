@@ -1,54 +1,41 @@
-import 'package:sqflite/sqflite.dart';
-
-import '../../database/database_helper.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/review_model.dart';
 
 class ReviewLocalDataSource {
-  final DatabaseHelper _dbHelper = DatabaseHelper();
+  final _client = Supabase.instance.client;
 
-  // Đã bổ sung userId, authorName và created_at
   Future<void> addReview(
     int movieId,
-    String userId,
+    String userId, // Phải là UUID
     String authorName,
     String comment,
     double rating,
   ) async {
-    final Database db = await _dbHelper.database;
-
-    await db.insert('reviews', {
+    await _client.from('reviews').insert({
       'movie_id': movieId,
       'user_id': userId,
       'author_name': authorName,
       'comment': comment,
       'rating': rating,
-      'created_at': DateTime.now()
-          .toIso8601String(), // Tự động lấy giờ hiện tại
+      'created_at': DateTime.now().toIso8601String(),
     });
   }
 
-  // Lấy bình luận của một phim (giữ nguyên logic nhưng model ánh xạ đã có đủ trường)
   Future<List<ReviewModel>> getReviewsForMovie(int movieId) async {
-    final Database db = await _dbHelper.database;
+    final response = await _client
+        .from('reviews')
+        .select()
+        .eq('movie_id', movieId)
+        .order('created_at', ascending: false);
 
-    final maps = await db.query(
-      'reviews',
-      where: 'movie_id = ?',
-      whereArgs: [movieId],
-      orderBy: 'created_at DESC', // Sắp xếp theo thời gian mới nhất thay vì ID
-    );
-
-    return maps.map((map) => ReviewModel.fromMap(map)).toList();
+    return (response as List).map((map) => ReviewModel.fromMap(map)).toList();
   }
 
-  // (Tùy chọn) Có thể kiểm tra thêm userId để đảm bảo chỉ user tạo bình luận mới được xóa
   Future<void> deleteReview(int reviewId, String currentUserId) async {
-    final Database db = await _dbHelper.database;
-
-    await db.delete(
-      'reviews',
-      where: 'id = ? AND user_id = ?',
-      whereArgs: [reviewId, currentUserId],
-    );
+    await _client
+        .from('reviews')
+        .delete()
+        .eq('id', reviewId)
+        .eq('user_id', currentUserId); // currentUserId phải là UUID
   }
 }

@@ -27,103 +27,114 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   void _submit() async {
     if (!_formKey.currentState!.validate()) return;
-
-    final email = _emailController.text.trim();
-    final password = _passwordController.text;
-
-    await ref.read(authStateProvider.notifier).login(email, password);
-
-    // don't use BuildContext across async gaps without checking mounted
-    if (!mounted) return;
-
-    final state = ref.read(authStateProvider);
-    if (state.token != null) {
-      // Navigate to dashboard after login
-      context.go('/dashboard');
-    } else if (state.error != null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(state.error!)));
-    }
+    await ref.read(authStateProvider.notifier).login(
+      _emailController.text.trim(),
+      _passwordController.text,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authStateProvider);
 
+    // Lắng nghe để chuyển hướng khi đăng nhập thành công
+    ref.listen<AuthState>(authStateProvider, (previous, next) {
+      if (next.user != null && previous?.user == null) {
+        context.go('/dashboard');
+      } else if (next.error != null && next.error != previous?.error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(next.error!)),
+        );
+      }
+    });
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Đăng nhập')),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Center(
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 600),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(height: 8),
-                Form(
-                  key: _formKey,
-                  child: Column(
+            constraints: const BoxConstraints(maxWidth: 400),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Text(
+                    'Chào mừng trở lại!',
+                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 32),
+                  TextFormField(
+                    controller: _emailController,
+                    decoration: const InputDecoration(
+                      labelText: 'Email',
+                      prefixIcon: Icon(Icons.email_outlined),
+                    ),
+                    validator: (v) => (v == null || !v.contains('@')) ? 'Email không hợp lệ' : null,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _passwordController,
+                    obscureText: _obscure,
+                    decoration: InputDecoration(
+                      labelText: 'Mật khẩu',
+                      prefixIcon: const Icon(Icons.lock_outline),
+                      suffixIcon: IconButton(
+                        icon: Icon(_obscure ? Icons.visibility : Icons.visibility_off),
+                        onPressed: () => setState(() => _obscure = !_obscure),
+                      ),
+                    ),
+                  ),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () async {
+                        final email = _emailController.text.trim();
+                        if (email.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Vui lòng nhập email để đặt lại mật khẩu')),
+                          );
+                          return;
+                        }
+                        await ref.read(authStateProvider.notifier).resetPassword(email);
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Yêu cầu đặt lại mật khẩu đã được gửi')),
+                          );
+                        }
+                      },
+                      child: const Text('Quên mật khẩu?'),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  PrimaryButton(
+                    label: authState.isLoading ? 'Đang xử lý...' : 'Đăng nhập',
+                    onPressed: authState.isLoading ? null : _submit,
+                  ),
+                  const SizedBox(height: 16),
+                  const Text('Hoặc', textAlign: TextAlign.center),
+                  const SizedBox(height: 16),
+                  OutlinedButton.icon(
+                    onPressed: () => ref.read(authStateProvider.notifier).signInWithGoogle(),
+                    icon: const Icon(Icons.login),
+                    label: const Text('Tiếp tục với Google'),
+                    style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12)),
+                  ),
+                  const SizedBox(height: 32),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      TextFormField(
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
-                        decoration: const InputDecoration(labelText: 'Email'),
-                        autofillHints: const [AutofillHints.email],
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Email không được để trống';
-                          }
-                          if (!value.contains('@')) {
-                            return 'Email không hợp lệ';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: _passwordController,
-                        obscureText: _obscure,
-                        decoration: InputDecoration(
-                          labelText: 'Mật khẩu',
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscure
-                                  ? Icons.visibility
-                                  : Icons.visibility_off,
-                            ),
-                            onPressed: () =>
-                                setState(() => _obscure = !_obscure),
-                          ),
-                        ),
-                        autofillHints: const [AutofillHints.password],
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Mật khẩu không được để trống';
-                          }
-                          if (value.length < 6) {
-                            return 'Mật khẩu phải có tối thiểu 6 ký tự';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 20),
-                      PrimaryButton(
-                        label: authState.isLoading
-                            ? 'Đang xử lý...'
-                            : 'Đăng nhập',
-                        onPressed: authState.isLoading ? null : _submit,
-                      ),
-                      const SizedBox(height: 8),
+                      const Text('Chưa có tài khoản?'),
                       TextButton(
                         onPressed: () => context.go('/register'),
-                        child: const Text('Tạo tài khoản mới'),
+                        child: const Text('Đăng ký ngay', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
                       ),
                     ],
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

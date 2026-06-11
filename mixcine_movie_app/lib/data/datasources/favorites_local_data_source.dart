@@ -1,41 +1,36 @@
-import 'package:sqflite/sqflite.dart';
-
-import '../../database/database_helper.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class FavoritesLocalDataSource {
-  final DatabaseHelper _dbHelper = DatabaseHelper();
+  final _client = Supabase.instance.client;
 
-  // ✓ Add userId parameter
   Future<Set<int>> getFavoriteIds(String userId) async {
-    final Database db = await _dbHelper.database;
+    final response = await _client
+        .from('favorites')
+        .select('movie_id')
+        .eq('user_id', userId);
 
-    final maps = await db.query(
-      'favorites',
-      where: 'user_id = ?', // ✓ Filter by user_id
-      whereArgs: [userId],
-    );
-
-    return maps.map((item) => item['movie_id'] as int).toSet();
+    return (response as List).map((item) => item['movie_id'] as int).toSet();
   }
 
-  // ✓ Add userId parameter
   Future<Set<int>> toggleFavorite(String userId, int movieId) async {
-    final Database db = await _dbHelper.database;
+    final existing = await _client
+        .from('favorites')
+        .select()
+        .eq('user_id', userId)
+        .eq('movie_id', movieId)
+        .maybeSingle();
 
-    final existing = await db.query(
-      'favorites',
-      where: 'user_id = ? AND movie_id = ?', // ✓ Filter by both
-      whereArgs: [userId, movieId],
-    );
-
-    if (existing.isNotEmpty) {
-      await db.delete(
-        'favorites',
-        where: 'user_id = ? AND movie_id = ?',
-        whereArgs: [userId, movieId],
-      );
+    if (existing != null) {
+      await _client
+          .from('favorites')
+          .delete()
+          .eq('user_id', userId)
+          .eq('movie_id', movieId);
     } else {
-      await db.insert('favorites', {'user_id': userId, 'movie_id': movieId});
+      await _client.from('favorites').insert({
+        'user_id': userId,
+        'movie_id': movieId,
+      });
     }
 
     return await getFavoriteIds(userId);

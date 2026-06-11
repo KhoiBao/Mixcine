@@ -1,15 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import '../../domain/entities/movie.dart';
 import 'app_providers.dart';
-import 'auth_provider.dart'; // ✓ Import auth provider
+import 'auth_provider.dart';
 
 class FavoriteIdsNotifier extends AsyncNotifier<Set<int>> {
   @override
   Future<Set<int>> build() async {
-    // ✓ WATCH instead of READ - rebuild when auth state changes
     final authState = ref.watch(authStateProvider);
-    final userId = authState.user?.email;
+    // SỬA: Phải dùng .id (mã UUID chuẩn của Supabase) thay vì .email
+    final userId = authState.user?.id;
 
     if (userId == null) return <int>{};
 
@@ -17,9 +16,8 @@ class FavoriteIdsNotifier extends AsyncNotifier<Set<int>> {
   }
 
   Future<void> toggle(int movieId) async {
-    // ✓ Get current user from auth provider
     final authState = ref.read(authStateProvider);
-    final userId = authState.user?.email;
+    final userId = authState.user?.id;
 
     if (userId == null) return;
 
@@ -35,10 +33,9 @@ class FavoriteIdsNotifier extends AsyncNotifier<Set<int>> {
     state = AsyncData(optimistic);
 
     try {
-      // ✓ Pass userId to toggle
       final updated = await ref
           .read(toggleFavoriteUseCaseProvider)
-          .call(userId, movieId);
+          .call(userId!, movieId);
       state = AsyncData(updated);
     } catch (_) {
       state = AsyncData(previous);
@@ -52,15 +49,12 @@ final favoriteIdsProvider =
     );
 
 final favoriteMoviesProvider = FutureProvider<List<Movie>>((ref) async {
-  // ✓ WATCH instead of READ - rebuild when auth state changes
   final authState = ref.watch(authStateProvider);
-  final userId = authState.user?.email;
+  final userId = authState.user?.id;
 
   if (userId == null) return <Movie>[];
 
-  // ✓ Watch favoriteIdsProvider to trigger rebuild when favorites change
   ref.watch(favoriteIdsProvider);
 
-  // ✓ Pass userId to get favorite movies
   return ref.read(getFavoriteMoviesUseCaseProvider).call(userId);
 });

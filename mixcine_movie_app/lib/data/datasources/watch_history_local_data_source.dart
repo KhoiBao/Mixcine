@@ -1,65 +1,51 @@
-import 'package:sqflite/sqflite.dart';
-
-import '../../database/database_helper.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/watch_history_model.dart';
 
 class WatchHistoryLocalDataSource {
-  final DatabaseHelper _dbHelper = DatabaseHelper();
+  final _client = Supabase.instance.client;
 
-  // Đã thêm userId và tự động tạo updated_at
   Future<void> saveWatchProgress(
-    String userId,
+    String userId, // Phải truyền UUID (user.id)
     int movieId,
     int progress,
   ) async {
-    final Database db = await _dbHelper.database;
-
-    await db.insert('watch_history', {
+    await _client.from('watch_history').upsert({
       'user_id': userId,
       'movie_id': movieId,
       'progress': progress,
-      'updated_at': DateTime.now()
-          .toIso8601String(), // Tự động lấy giờ hiện tại
-    }, conflictAlgorithm: ConflictAlgorithm.replace);
+      'updated_at': DateTime.now().toIso8601String(),
+    }, onConflict: 'user_id, movie_id');
   }
 
-  // Đã thêm userId để chỉ lấy tiến độ của tài khoản đang đăng nhập
   Future<int?> getWatchProgress(String userId, int movieId) async {
-    final Database db = await _dbHelper.database;
+    final response = await _client
+        .from('watch_history')
+        .select('progress')
+        .eq('user_id', userId)
+        .eq('movie_id', movieId)
+        .maybeSingle();
 
-    final maps = await db.query(
-      'watch_history',
-      where: 'user_id = ? AND movie_id = ?',
-      whereArgs: [userId, movieId],
-    );
-
-    if (maps.isNotEmpty) {
-      return maps.first['progress'] as int;
+    if (response != null) {
+      return response['progress'] as int;
     }
     return null;
   }
 
-  // Đã thêm userId để lấy danh sách lịch sử của riêng user đó, sắp xếp theo thời gian mới nhất
   Future<List<WatchHistoryModel>> getAllWatchHistory(String userId) async {
-    final Database db = await _dbHelper.database;
+    final response = await _client
+        .from('watch_history')
+        .select()
+        .eq('user_id', userId)
+        .order('updated_at', ascending: false);
 
-    final maps = await db.query(
-      'watch_history',
-      where: 'user_id = ?',
-      whereArgs: [userId],
-      orderBy: 'updated_at DESC', // Đưa phim mới xem lên đầu
-    );
-
-    return maps.map((map) => WatchHistoryModel.fromMap(map)).toList();
+    return (response as List).map((map) => WatchHistoryModel.fromMap(map)).toList();
   }
 
   Future<void> removeWatchHistory(String userId, int movieId) async {
-    final Database db = await _dbHelper.database;
-
-    await db.delete(
-      'watch_history',
-      where: 'user_id = ? AND movie_id = ?',
-      whereArgs: [userId, movieId],
-    );
+    await _client
+        .from('watch_history')
+        .delete()
+        .eq('user_id', userId)
+        .eq('movie_id', movieId);
   }
 }
