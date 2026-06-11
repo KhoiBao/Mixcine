@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/movie.dart';
 import 'app_providers.dart';
@@ -7,7 +8,6 @@ class FavoriteIdsNotifier extends AsyncNotifier<Set<int>> {
   @override
   Future<Set<int>> build() async {
     final authState = ref.watch(authStateProvider);
-    // SỬA: Phải dùng .id (mã UUID chuẩn của Supabase) thay vì .email
     final userId = authState.user?.id;
 
     if (userId == null) return <int>{};
@@ -19,7 +19,12 @@ class FavoriteIdsNotifier extends AsyncNotifier<Set<int>> {
     final authState = ref.read(authStateProvider);
     final userId = authState.user?.id;
 
-    if (userId == null) return;
+    if (userId == null) {
+      debugPrint('LOG FAVORITE: Không thể toggle vì userId đang NULL. Vui lòng đăng nhập!');
+      return;
+    }
+
+    debugPrint('LOG FAVORITE: Đang toggle phim ID: $movieId cho User: $userId');
 
     final previous = state.value ?? <int>{};
     final optimistic = <int>{...previous};
@@ -36,8 +41,10 @@ class FavoriteIdsNotifier extends AsyncNotifier<Set<int>> {
       final updated = await ref
           .read(toggleFavoriteUseCaseProvider)
           .call(userId!, movieId);
+      debugPrint('LOG FAVORITE: Lưu thành công vào Database');
       state = AsyncData(updated);
-    } catch (_) {
+    } catch (e) {
+      debugPrint('LOG FAVORITE: Lỗi khi lưu vào Database: $e');
       state = AsyncData(previous);
     }
   }
