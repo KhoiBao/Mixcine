@@ -61,16 +61,6 @@ class AuthRemoteDataSource {
     };
   }
 
-  Map<String, dynamic> _createFallbackProfile(User user) {
-    return {
-      'id': user.id,
-      'email': user.email,
-      'full_name': user.userMetadata?['full_name'] ?? user.userMetadata?['name'] ?? 'Người dùng',
-      'phone_number': user.userMetadata?['phone_number'] ?? '',
-      'plan': 'FREE',
-    };
-  }
-
   Future<Map<String, dynamic>?> getUserByEmail(String email) async {
     final profile = await _client
         .from('profiles')
@@ -94,7 +84,7 @@ class AuthRemoteDataSource {
     );
   }
 
-  // 🚀 ĐÃ SỬA CHUẨN XÁC: Gọi update xong mới gọi .select() để bắt lỗi RLS
+  // 🚀 ĐÃ SỬA CHUẨN XÁC: Gọi update bằng ID để đảm bảo không bị "lây" plan giữa các account
   Future<void> updateUserPlan(String userId, String newPlan) async {
     final response = await _client
         .from('profiles')
@@ -102,21 +92,9 @@ class AuthRemoteDataSource {
         .eq('id', userId)
         .select();
 
-    print('KẾT QUẢ UPDATE VIP TỪ SUPABASE: $response');
-  }
-
-  Future<void> updateProfile(String userId, String fullName, String phoneNumber) async {
-    await _client
-        .from('profiles')
-        .update({
-      'full_name': fullName,
-      'phone_number': phoneNumber,
-    })
-  Future<void> updateUserPlan(String email, String newPlan) async {
-    await _client
-        .from('profiles')
-        .update({'plan': newPlan})
-        .eq('email', email.trim());
+    if (kDebugMode) {
+      print('KẾT QUẢ UPDATE VIP TỪ SUPABASE: $response');
+    }
   }
 
   // =======================================================================

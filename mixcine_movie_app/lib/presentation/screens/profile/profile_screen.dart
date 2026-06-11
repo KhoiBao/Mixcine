@@ -30,10 +30,6 @@ class ProfileScreen extends ConsumerWidget {
     final themeMode = ref.watch(themeProvider);
     final currentIsDark = themeMode == ThemeMode.dark;
 
-    // 🚀 Theo dõi trạng thái Theme hiện tại
-    final themeMode = ref.watch(themeProvider);
-    final currentIsDark = themeMode == ThemeMode.dark;
-
     // 🚀 Logic xác định gói cước và huy hiệu
     final subscription = ref.watch(subscriptionProvider);
     final isPremium =
@@ -90,10 +86,6 @@ class ProfileScreen extends ConsumerWidget {
                 ),
                 child: Row(
                   children: [
-                    // =======================================================================
-                    // KHUNG TRÒN HIỂN THỊ AVATAR ĐÃ ĐỒNG BỘ REALTIME TỪ DATABASE
-                    // =======================================================================
-                    // Thay phần CircleAvatar trong ProfileScreen
                     CircleAvatar(
                       radius: 36,
                       backgroundColor: colorScheme.primary.withOpacity(0.12),
@@ -130,7 +122,6 @@ class ProfileScreen extends ConsumerWidget {
                             ),
                           ),
                           const SizedBox(height: 12),
-                          // Huy hiệu gói cước tinh tế
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 12,
@@ -162,7 +153,6 @@ class ProfileScreen extends ConsumerWidget {
 
               const SizedBox(height: 24),
 
-              // --- GRID TIỆN ÍCH: YÊU THÍCH & ĐỔI THEME ---
               Row(
                 children: [
                   Expanded(
@@ -198,7 +188,6 @@ class ProfileScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 16),
 
-              // --- DANH SÁCH MENU TIỆN ÍCH ---
               _ProfileTile(
                 icon: Icons.edit_note_rounded,
                 title: 'Chỉnh sửa hồ sơ',
@@ -212,6 +201,7 @@ class ProfileScreen extends ConsumerWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
+                      // 🚀 ĐÃ FIX: Bỏ const ở đây vì NotificationScreen không có const constructor
                       builder: (context) => NotificationScreen(),
                     ),
                   );

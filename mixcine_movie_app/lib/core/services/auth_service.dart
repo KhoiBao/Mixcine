@@ -9,7 +9,6 @@ class AuthService {
   final AuthRemoteDataSource _dataSource = AuthRemoteDataSource();
   final _client = Supabase.instance.client;
 
-  // --- CÁC HÀM KHÁC GIỮ NGUYÊN ---
   Future<(String, UserModel)> login({
     required String email,
     required String password,
@@ -18,13 +17,7 @@ class AuthService {
       final userData = await _dataSource.login(email, password);
       final token = _client.auth.currentSession?.accessToken ?? '';
 
-      final user = UserModel(
-        id: userData['id'].toString(),
-        email: userData['email'],
-        fullName: userData['full_name'],
-        phoneNumber: userData['phone_number'],
-        plan: userData['plan'],
-      );
+      final user = _mapToUserModel(userData);
 
       return (token, user);
     } on AuthException catch (e) {
@@ -70,30 +63,9 @@ class AuthService {
     try {
       final userData = await _dataSource.getUserByEmail(email);
       if (userData == null) return null;
-      return UserModel(
-        id: userData['id'].toString(),
-        email: userData['email'],
-        fullName: userData['full_name'],
-        phoneNumber: userData['phone_number'],
-        plan: userData['plan'],
-      );
+      return _mapToUserModel(userData);
     } catch (e) {
       return null;
-    }
-  }
-
-  Future<void> updateProfile(UserModel user) async {
-    if (user.id == null) {
-      throw AppAuthException('Không tìm thấy ID người dùng để cập nhật');
-    }
-    try {
-      await _dataSource.updateProfile(
-        user.id!,
-        user.fullName ?? '',
-        user.phoneNumber ?? ''
-      );
-    } catch (e) {
-      throw AppAuthException(e.toString());
     }
   }
 
@@ -115,8 +87,6 @@ class AuthService {
       final localDS = SubscriptionLocalDataSource(prefs);
       await localDS.clearSubscription(userId);
     }
-    final userData = await _dataSource.getUserByEmail(email);
-    return userData != null ? _mapToUserModel(userData) : null;
   }
 
   // --- HÀM UPDATE PROFILE HOÀN CHỈNH ---
@@ -151,25 +121,12 @@ class AuthService {
       }
 
       // 2. Cập nhật DB
-      final Map<String, dynamic> updateData = {
-        'full_name': newFullName,
-        'phone_number': newPhoneNumber,
-      };
-
-      if (finalAvatarUrl != null) {
-        updateData['avatar_url'] = finalAvatarUrl;
-      }
-
-      await _client.from('profiles').update(updateData).eq('id', userId);
+      await _dataSource.updateProfile(userId, newFullName, newPhoneNumber, finalAvatarUrl);
 
       // 3. Lấy lại URL ảnh cuối cùng để đồng bộ UI
       if (finalAvatarUrl == null) {
-        final profileRes = await _client
-            .from('profiles')
-            .select('avatar_url')
-            .eq('id', userId)
-            .maybeSingle();
-        finalAvatarUrl = profileRes?['avatar_url'] as String?;
+        final userData = await _dataSource.getUserByEmail(_client.auth.currentUser?.email ?? '');
+        finalAvatarUrl = userData?['avatar_url'] as String?;
       }
 
       return finalAvatarUrl;
@@ -186,16 +143,10 @@ class AuthService {
       email: data['email'],
       fullName: data['full_name'],
       phoneNumber: data['phone_number'],
-      plan: data['plan'],
+      plan: data['plan'] ?? 'FREE',
       avatar: data['avatar_url'] ?? data['avatar'],
     );
   }
-
-  // --- MỞ RỘNG CÁC HÀM KHÁC ---
-  Future<void> signInWithGoogle() async => await _dataSource.signInWithGoogle();
-  Future<void> signOut() async => await _client.auth.signOut();
-  Future<void> resetPassword(String email) async =>
-      await _dataSource.resetPassword(email);
 }
 
 class AppAuthException implements Exception {
