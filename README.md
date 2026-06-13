@@ -70,6 +70,8 @@ The project still uses mock data by default.
 4. Paste your API key into `tmdbApiKey`
 5. Run the app again
 
+### Demo:
+Google Drive: https://drive.google.com/drive/folders/1YaGXA6j7V0sEaPanlxakO-l9TNbkwTSi?usp=sharing
 ---
  *If you need help or any further contact please contact through my Gmail which locate on my Github profile, wishing you have a nice day.* 
 
