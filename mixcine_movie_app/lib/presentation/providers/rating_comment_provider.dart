@@ -19,7 +19,8 @@ class MovieRatingsNotifier extends Notifier<Map<int, double>> {
 }
 
 // 2. Quản lý bình luận (Kết nối trực tiếp Supabase)
-class MovieCommentsNotifier extends FamilyAsyncNotifier<List<MovieComment>, int> {
+class MovieCommentsNotifier
+    extends FamilyAsyncNotifier<List<MovieComment>, int> {
   @override
   Future<List<MovieComment>> build(int movieId) async {
     // Tự động tải bình luận từ Supabase
@@ -33,14 +34,16 @@ class MovieCommentsNotifier extends FamilyAsyncNotifier<List<MovieComment>, int>
     if (user == null || user.id == null) return;
 
     try {
-      await ref.read(reviewRepositoryProvider).addReview(
+      await ref
+          .read(reviewRepositoryProvider)
+          .addReview(
             arg, // movieId
             user.id!, // UUID chuẩn
             user.fullName ?? user.email,
             text,
             rating,
           );
-      
+
       // Làm mới danh sách sau khi thêm thành công
       ref.invalidateSelf();
     } catch (e) {
@@ -62,6 +65,8 @@ class MovieCommentsNotifier extends FamilyAsyncNotifier<List<MovieComment>, int>
 }
 
 final movieCommentsProvider =
-    AsyncNotifierProvider.family<MovieCommentsNotifier, List<MovieComment>, int>(
-      MovieCommentsNotifier.new,
-    );
+    AsyncNotifierProvider.family<
+      MovieCommentsNotifier,
+      List<MovieComment>,
+      int
+    >(MovieCommentsNotifier.new);

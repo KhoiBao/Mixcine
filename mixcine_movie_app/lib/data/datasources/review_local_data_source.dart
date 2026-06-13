@@ -17,7 +17,7 @@ class ReviewLocalDataSource {
       'author_name': authorName,
       'comment': comment,
       'rating': rating,
-      'created_at': DateTime.now().toIso8601String(),
+      'created_at': DateTime.now().toUtc().toIso8601String(),
     });
   }
 

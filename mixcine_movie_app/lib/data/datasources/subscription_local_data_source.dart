@@ -1,37 +1,39 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-// Nhớ import file model của bro ở đây nhé
 import '../models/subscription_model.dart';
 
 class SubscriptionLocalDataSource {
   SubscriptionLocalDataSource(this.prefs);
 
   final SharedPreferences prefs;
-  static const String _subscriptionKey = 'current_user_subscription';
+  
+  // Tạo key riêng cho từng User dựa trên ID
+  String _getKey(String userId) => 'subscription_user_$userId';
 
-  /// Lưu thông tin gói cước vào local storage
+  /// Lưu thông tin gói cước vào local storage theo User ID
   Future<void> saveSubscription(SubscriptionModel subscription) async {
     final jsonString = json.encode(subscription.toJson());
-    await prefs.setString(_subscriptionKey, jsonString);
+    await prefs.setString(_getKey(subscription.userId), jsonString);
   }
 
-  /// Lấy thông tin gói cước từ local storage
-  SubscriptionModel? getSubscription() {
-    final jsonString = prefs.getString(_subscriptionKey);
+  /// Lấy thông tin gói cước của đúng User đó
+  SubscriptionModel? getSubscription(String? userId) {
+    if (userId == null) return null;
+    
+    final jsonString = prefs.getString(_getKey(userId));
     if (jsonString != null) {
       try {
         final jsonMap = json.decode(jsonString) as Map<String, dynamic>;
         return SubscriptionModel.fromJson(jsonMap);
       } catch (e) {
-        // Có thể log error ra đây nếu parse xịt
         return null;
       }
     }
     return null;
   }
 
-  /// Xóa thông tin gói cước (dùng khi user đăng xuất hoặc hết hạn)
-  Future<void> clearSubscription() async {
-    await prefs.remove(_subscriptionKey);
+  /// Xóa thông tin gói (thường dùng khi hết hạn)
+  Future<void> clearSubscription(String userId) async {
+    await prefs.remove(_getKey(userId));
   }
 }
